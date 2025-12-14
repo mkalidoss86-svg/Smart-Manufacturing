@@ -6,7 +6,7 @@ namespace ManufacturingDataSimulator.Infrastructure.Strategies;
 public class ConfigurableDefectDistributionStrategy : IDefectDistributionStrategy
 {
     private readonly double _defectProbability;
-    private static readonly Random _random = new();
+    private static readonly ThreadLocal<Random> _threadRandom = new(() => new Random(Guid.NewGuid().GetHashCode()));
 
     public ConfigurableDefectDistributionStrategy(double defectPercentage)
     {
@@ -23,9 +23,9 @@ public class ConfigurableDefectDistributionStrategy : IDefectDistributionStrateg
         }
 
         var defectTypes = Enum.GetValues<DefectType>().Where(d => d != DefectType.None).ToArray();
-        var defectType = defectTypes[_random.Next(defectTypes.Length)];
+        var defectType = defectTypes[_threadRandom.Value!.Next(defectTypes.Length)];
 
-        var severityRoll = _random.NextDouble();
+        var severityRoll = _threadRandom.Value!.NextDouble();
         DefectSeverity severity;
         QualityStatus status;
 

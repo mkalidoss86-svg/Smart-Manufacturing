@@ -196,7 +196,11 @@ class VisionFlowApp {
                 const total = line.events.length;
                 const qualityScore = total > 0 ? (line.passCount / total) * 100 : 0;
                 const defectRate = total > 0 ? ((line.failCount + line.warningCount) / total) * 100 : 0;
-                const status = defectRate < 5 ? 'NORMAL' : defectRate < 15 ? 'WARNING' : 'CRITICAL';
+                const status = defectRate < window.APP_CONFIG.DEFECT_RATE_THRESHOLD_WARNING 
+                    ? 'NORMAL' 
+                    : defectRate < window.APP_CONFIG.DEFECT_RATE_THRESHOLD_CRITICAL 
+                    ? 'WARNING' 
+                    : 'CRITICAL';
                 
                 return {
                     id: line.name,

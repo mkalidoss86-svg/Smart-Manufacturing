@@ -200,5 +200,10 @@ Thumbs.db
 # Logs
 logs/
 
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
 # Temporary files
 /tmp/

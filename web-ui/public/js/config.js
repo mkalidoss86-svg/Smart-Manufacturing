@@ -6,5 +6,9 @@ window.APP_CONFIG = {
     WEBSOCKET_URL: window.ENV?.WEBSOCKET_URL || 'ws://localhost:5000/ws',
     REFRESH_INTERVAL: parseInt(window.ENV?.REFRESH_INTERVAL || '5000'),
     MAX_DEFECTS_DISPLAY: parseInt(window.ENV?.MAX_DEFECTS_DISPLAY || '50'),
-    MAX_NOTIFICATIONS: parseInt(window.ENV?.MAX_NOTIFICATIONS || '20')
+    MAX_NOTIFICATIONS: parseInt(window.ENV?.MAX_NOTIFICATIONS || '20'),
+    
+    // Production line status thresholds
+    DEFECT_RATE_THRESHOLD_WARNING: parseFloat(window.ENV?.DEFECT_RATE_THRESHOLD_WARNING || '5.0'),
+    DEFECT_RATE_THRESHOLD_CRITICAL: parseFloat(window.ENV?.DEFECT_RATE_THRESHOLD_CRITICAL || '15.0')
 };
