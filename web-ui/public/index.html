@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisionFlow - Smart Manufacturing Quality Platform</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>VisionFlow</h1>
+            <p class="subtitle">Smart Manufacturing Quality Platform</p>
+            <div class="connection-status">
+                <span class="status-indicator" id="connectionStatus"></span>
+                <span id="connectionText">Connecting...</span>
+            </div>
+        </header>
+
+        <main>
+            <!-- System Health Section -->
+            <section class="panel">
+                <h2>System Health</h2>
+                <div class="health-grid" id="systemHealth">
+                    <div class="health-item">
+                        <span class="service-name">Loading...</span>
+                        <span class="health-status">-</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Production Lines Section -->
+            <section class="panel">
+                <h2>Production Lines - Live Quality Status</h2>
+                <div class="lines-grid" id="productionLines">
+                    <div class="line-card">
+                        <div class="line-header">
+                            <h3>Loading...</h3>
+                            <span class="status-badge">-</span>
+                        </div>
+                        <div class="line-metrics">
+                            <div class="metric">
+                                <span class="metric-label">Quality Score</span>
+                                <span class="metric-value">-</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Defect Rate</span>
+                                <span class="metric-value">-</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Units/Hour</span>
+                                <span class="metric-value">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Defects Section -->
+            <section class="panel">
+                <h2>Recent Defects & Anomalies</h2>
+                <div class="defects-container">
+                    <table class="defects-table" id="defectsTable">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Line</th>
+                                <th>Type</th>
+                                <th>Severity</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="5" class="loading">Loading defects data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Real-time Notifications -->
+            <section class="panel notifications-panel">
+                <h2>Real-time Notifications</h2>
+                <div class="notifications-container" id="notifications">
+                    <div class="notification info">
+                        <span class="notification-time">--:--:--</span>
+                        <span class="notification-message">Waiting for notifications...</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>VisionFlow &copy; 2025 | Real-time Quality Intelligence System</p>
+        </footer>
+    </div>
+
+    <script src="/env.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="js/websocket-client.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
