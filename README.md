@@ -1,24 +1,65 @@
 # Smart-Manufacturing
 
+
 The Smart Manufacturing Quality Platform is a scalable, event-driven quality intelligence system designed to monitor manufacturing processes in near real time, detect quality anomalies, and support autonomous decision-making through Agentic AI.
 
-## Project Structure
+## Services
 
-### Inspection Worker Service
+### Results API
 
-A .NET 8 worker service that processes quality inspection requests from a message queue.
+The Results API service provides RESTful endpoints for storing and querying inspection results.
 
 **Key Features:**
-- Clean Architecture (Domain, Application, Infrastructure, Worker layers)
-- Event-driven processing with RabbitMQ
-- Strategy pattern for inspection logic
-- Retry and dead-letter queue patterns
-- Idempotent and stateless processing
-- Graceful shutdown support
-- Health checks and structured logging
-- Horizontally scalable
+- .NET 8 Minimal API
+- Store inspection results with in-memory persistence
+- Query by lineId, status, and time range
+- Pagination support
+- Stateless service design
+- Clean Architecture with repository abstraction
+- CQRS-style separation (read-focused)
+- Structured logging and /health endpoint
 
-**Documentation:** [Inspection Worker Documentation](docs/INSPECTION-WORKER.md)
+**Documentation:** [src/ResultsApi/README.md](src/ResultsApi/README.md)
+
+### VisionFlow – Notification Service
+
+A real-time notification service built with .NET 8 and SignalR for pushing inspection updates to clients.
+
+**Features:**
+- **Real-time Communication**: SignalR-based WebSocket connections for instant updates
+- **Clean Architecture**: Separated into Domain, Application, Infrastructure, and API layers
+- **Observer/Pub-Sub Pattern**: Decoupled event-driven architecture
+- **Horizontal Scalability**: Redis backplane support for multi-instance deployments
+- **Missed-Event Recovery**: Clients can retrieve events missed during disconnection
+- **Connection Management**: Configurable connection limits and automatic reconnection handling
+- **Health Monitoring**: Built-in health check endpoint
+- **Structured Logging**: JSON-formatted logs for easy monitoring
+
+**Documentation:**
+- [Notification Service README](API.md)
+- [Deployment Guide](DEPLOYMENT.md)
+
+### Ingestion API
+
+A .NET 8 Minimal API service for ingesting production quality events.
+
+**Features:**
+- REST API for production quality events
+- Input validation with FluentValidation
+- Event enrichment (IDs, timestamps, lineId)
+- RabbitMQ publishing with retry and circuit breaker patterns
+- Structured logging with Serilog
+- Health check endpoint
+- Clean Architecture design
+
+**Documentation:** [docs/INGESTION_API.md](docs/INGESTION_API.md)
+
+### Other Platform Services
+
+- **DataIngestion API** (Port 5001): Ingests manufacturing data
+- **QualityAnalytics API** (Port 5002): Analyzes quality metrics
+- **AlertNotification API** (Port 5003): Manages alerts and notifications
+- **Dashboard API** (Port 5004): Provides dashboard data
 
 ## CI/CD Failure Analysis Agent
 
@@ -58,13 +99,21 @@ The failure analysis agent runs automatically on every push or pull request. To 
 
 ### Prerequisites
 
-- .NET 8 SDK
-- RabbitMQ (local or remote) - for Inspection Worker
-- Docker & Docker Compose
+- .NET 8 SDK or later
+- Docker and Docker Compose (for containerized deployment)
+- RabbitMQ (for message-based services)
+- Redis (for notification service backplane)
+- Node.js 18+ (for web-ui development)
 
 ### Quick Start with Docker Compose
 
+The easiest way to run all services together:
+
 ```bash
+# Clone the repository
+git clone https://github.com/mkalidoss86-svg/Smart-Manufacturing.git
+cd Smart-Manufacturing
+
 # Run in detached mode
 docker compose up -d --build
 
@@ -76,33 +125,53 @@ docker compose down
 ```
 
 Services will be available at:
-- RabbitMQ Management: http://localhost:15672 (guest/guest)
-- Inspection Worker: Running in background
 - DataIngestion API: http://localhost:5001
 - QualityAnalytics API: http://localhost:5002
 - AlertNotification API: http://localhost:5003
 - Dashboard API: http://localhost:5004
+- Results API: http://localhost:5106 (HTTP) or https://localhost:7081 (HTTPS)
+- Notification Service: http://localhost:8080 (HTTP) or http://localhost:8081 (SignalR)
+- Web UI: http://localhost:8080
 
 ### Running Individual Services
 
-To run a specific service locally:
+#### Results API
 
 ```bash
-# Navigate to service directory
-cd src/DataIngestion.API
+# Build the solution
+dotnet build SmartManufacturing.sln
 
-# Restore dependencies
-dotnet restore
-
-# Run the service
+# Run the Results API service
+cd src/ResultsApi
 dotnet run
 ```
 
-For the Inspection Worker:
+The Results API will be available at:
+- HTTPS: https://localhost:7081
+- HTTP: http://localhost:5106
+- Swagger UI: https://localhost:7081/swagger
+
+#### Ingestion API
 
 ```bash
-cd src/InspectionWorker
+# Start RabbitMQ
+docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+
+# Build and run
+dotnet build VisionFlow.sln
+cd src/IngestionApi/VisionFlow.IngestionApi
 dotnet run
+```
+
+#### Notification Service
+
+```bash
+# Start Redis
+docker run -d --name redis -p 6379:6379 redis:7-alpine
+
+# Build and run
+dotnet build VisionFlow.sln
+dotnet run --project src/NotificationService/NotificationService.Api
 ```
 
 ## 🏥 Health Checks
@@ -110,20 +179,24 @@ dotnet run
 Each service exposes a health endpoint at `/health`:
 
 ```bash
-curl http://localhost:5001/health
-curl http://localhost:5002/health
-curl http://localhost:5003/health
-curl http://localhost:5004/health
+curl http://localhost:5001/health  # DataIngestion API
+curl http://localhost:5002/health  # QualityAnalytics API
+curl http://localhost:5003/health  # AlertNotification API
+curl http://localhost:5004/health  # Dashboard API
+curl http://localhost:5106/health  # Results API
+curl http://localhost:8080/health  # Notification Service
 ```
 
 ## 📊 API Documentation
 
-When running in Development mode, each service exposes Swagger UI:
+When running in Development mode, most services expose Swagger UI:
 
 - DataIngestion API: http://localhost:5001/swagger
 - QualityAnalytics API: http://localhost:5002/swagger
 - AlertNotification API: http://localhost:5003/swagger
 - Dashboard API: http://localhost:5004/swagger
+- Results API: https://localhost:7081/swagger
+- Ingestion API: Check service documentation
 
 ## 🐳 Docker
 
@@ -131,10 +204,10 @@ Each service has its own Dockerfile located in its respective directory:
 
 ```bash
 # Build individual service image
-docker build -t dataingestion-api:latest -f src/DataIngestion.API/Dockerfile src/DataIngestion.API
+docker build -t resultsapi:latest -f src/ResultsApi/Dockerfile src/ResultsApi
 
 # Run individual service
-docker run -p 5001:5001 -e ASPNETCORE_URLS=http://+:5001 dataingestion-api:latest
+docker run -p 5106:8080 resultsapi:latest
 ```
 
 ## ☸️ Kubernetes Deployment
@@ -164,19 +237,11 @@ kubectl get services -n visionflow
 ### Building All Services
 
 ```bash
-# From repository root
-dotnet build src/InspectionWorker/InspectionWorker.csproj
-dotnet build src/DataIngestion.API/DataIngestion.API.csproj
-dotnet build src/QualityAnalytics.API/QualityAnalytics.API.csproj
-dotnet build src/AlertNotification.API/AlertNotification.API.csproj
-dotnet build src/Dashboard.API/Dashboard.API.csproj
-```
+# Build VisionFlow services
+dotnet build VisionFlow.sln
 
-### Testing
-
-```bash
-# Run tests for Inspection Worker
-dotnet test tests/InspectionWorker.Tests/InspectionWorker.Tests.csproj
+# Build Results API (separate solution)
+dotnet build SmartManufacturing.sln
 ```
 
 ### Project Structure
@@ -184,58 +249,62 @@ dotnet test tests/InspectionWorker.Tests/InspectionWorker.Tests.csproj
 ```
 Smart-Manufacturing/
 ├── .github/
+│   ├── scripts/                      # CI/CD automation scripts
 │   └── workflows/
-│       └── ci.yml                    # GitHub Actions CI workflow
+│       ├── ci.yml                    # GitHub Actions CI workflow
+│       └── ci-pipeline.yml           # Full CI/CD pipeline
 ├── src/
-│   ├── InspectionWorker/             # Inspection worker service
-│   │   ├── InspectionWorker.csproj
-│   │   ├── Worker.cs
-│   │   ├── Program.cs
-│   │   └── Dockerfile
-│   ├── InspectionWorker.Domain/      # Domain layer
-│   ├── InspectionWorker.Application/ # Application layer
-│   ├── InspectionWorker.Infrastructure/ # Infrastructure layer
-│   ├── DataIngestion.API/            # Data ingestion service
+│   ├── NotificationService/          # Notification service with SignalR
+│   ├── IngestionApi/                 # Ingestion API service
+│   │   └── VisionFlow.IngestionApi/
+│   ├── Domain/                       # Shared domain layer
+│   │   └── VisionFlow.Domain/
+│   ├── Application/                  # Shared application layer
+│   │   └── VisionFlow.Application/
+│   ├── Infrastructure/               # Shared infrastructure layer
+│   │   └── VisionFlow.Infrastructure/
+│   ├── DataIngestion.API/            # Legacy data ingestion service
 │   ├── QualityAnalytics.API/         # Quality analytics service
 │   ├── AlertNotification.API/        # Alert notification service
-│   └── Dashboard.API/                # Dashboard API service
-├── tests/
-│   └── InspectionWorker.Tests/       # Unit tests
+│   ├── Dashboard.API/                # Dashboard API service
+│   └── ResultsApi/                   # Results API service (inspection results)
 ├── infrastructure/
 │   ├── k8s/                          # Kubernetes manifests
-│   │   ├── namespace.yaml
-│   │   ├── configmap.yaml
-│   │   ├── deployments.yaml
-│   │   └── services.yaml
 │   └── docker/                       # Docker configurations
+├── web-ui/                           # Web UI service
 ├── docs/
-│   ├── ARCHITECTURE.md               # Detailed architecture documentation
-│   ├── INSPECTION-WORKER.md          # Inspection Worker documentation
-│   └── MESSAGE-PRODUCER-SAMPLES.md   # Message producer examples
+│   ├── ARCHITECTURE.md               # Architecture documentation
+│   ├── CI-CD.md                      # CI/CD documentation
+│   ├── DOCKER_TESTING.md             # Docker testing guide
+│   └── INGESTION_API.md              # Ingestion API documentation
 ├── docker-compose.yml                # Local development compose file
-├── VisionFlow.sln                    # Solution file
-├── global.json                       # .NET SDK version
+├── VisionFlow.sln                    # Main solution file
+├── SmartManufacturing.sln            # Legacy solution (Results API)
 └── README.md                         # This file
 ```
 
 ## Architecture
 
-The platform follows Clean Architecture principles with clear separation of concerns:
-
+The platform follows Clean Architecture principles with:
 - **Domain Layer**: Core business entities and interfaces
-- **Application Layer**: Business logic and use cases
-- **Infrastructure Layer**: External concerns (messaging, databases, etc.)
-- **Worker Layer**: Background service hosting
+- **Application Layer**: DTOs, interfaces, business logic, and use cases
+- **Infrastructure Layer**: Repository implementations, external dependencies (RabbitMQ, Redis, databases)
+- **API Layer**: RESTful endpoints and presentation using .NET Minimal APIs
 
-## Technologies
+## Technology Stack
 
-- .NET 8
-- RabbitMQ
-- xUnit
-- Structured Logging (JSON)
-- Health Checks
+- .NET 8.0
+- ASP.NET Core Minimal APIs
+- SignalR (for real-time communication)
+- RabbitMQ (for message queuing)
+- Redis (for distributed caching and SignalR backplane)
+- FluentValidation (for input validation)
+- Serilog (for structured logging)
+- Clean Architecture
+- Dependency Injection
 - Docker & Docker Compose
 - Kubernetes
+- Node.js (Web UI)
 
 ## 🔄 CI/CD
 
@@ -245,16 +314,20 @@ The project uses GitHub Actions for continuous integration. The CI pipeline:
 2. Runs tests (if available)
 3. Builds Docker images for each service
 4. Validates Docker images
+5. Automated failure analysis with issue creation
 
 See `.github/workflows/ci.yml` for details.
 
 ## 📖 Documentation
 
 - [Architecture Documentation](docs/ARCHITECTURE.md)
-- [Inspection Worker Service](docs/INSPECTION-WORKER.md)
-- [Message Producer Samples](docs/MESSAGE-PRODUCER-SAMPLES.md)
-- [Docker Testing](docs/DOCKER_TESTING.md)
 - [CI/CD Documentation](docs/CI-CD.md)
+- [Docker Testing Guide](docs/DOCKER_TESTING.md)
+- [Ingestion API Documentation](docs/INGESTION_API.md)
+- [Results API Implementation](src/ResultsApi/IMPLEMENTATION_SUMMARY.md)
+- [Notification Service API](API.md)
+- [Deployment Guide](DEPLOYMENT.md)
+- [CI/CD Failure Analysis](IMPLEMENTATION_SUMMARY.md)
 
 ## 🤝 Contributing
 
@@ -262,4 +335,4 @@ This is a foundational scaffold for the VisionFlow platform. Business logic and 
 
 ## 📝 License
 
-Copyright © 2024 VisionFlow Platform
+Copyright © 2024 VisionFlow Smart Manufacturing Platform
