@@ -1,31 +1,40 @@
-# VisionFlow – Smart Manufacturing Quality Platform
+# Smart-Manufacturing
 
-VisionFlow is a scalable, event-driven quality intelligence system designed to monitor manufacturing processes in near real-time, detect quality anomalies, and support autonomous decision-making through Agentic AI.
+The Smart Manufacturing Quality Platform is a scalable, event-driven quality intelligence system designed to monitor manufacturing processes in near real time, detect quality anomalies, and support autonomous decision-making through Agentic AI.
 
-## 🏗️ Architecture Overview
+## CI/CD Failure Analysis Agent
 
-This platform is built using a microservices architecture with the following core services:
+This repository includes an automated CI/CD monitoring system that:
+- 🔍 Detects pipeline failures across all stages (Build, Test, Docker, Kubernetes)
+- 📋 Automatically creates detailed GitHub Issues with error analysis
+- 🏷️ Classifies failures and applies appropriate labels
+- 💡 Provides root cause suggestions and remediation steps
+- ✅ Auto-closes issues when subsequent pipeline runs succeed
+- 🚫 Prevents duplicate issues for the same commit
 
-- **DataIngestion.API** (Port 5001): Handles ingestion of manufacturing data from various sources
-- **QualityAnalytics.API** (Port 5002): Processes and analyzes quality metrics
-- **AlertNotification.API** (Port 5003): Manages alerts and notifications
-- **Dashboard.API** (Port 5004): Provides API for dashboard and visualization
+### Quick Start
 
-## 🚀 Getting Started
+The failure analysis agent runs automatically on every push or pull request. To test it manually:
 
-### Prerequisites
+1. Go to **Actions** → **CI/CD Test - Simulated Failure**
+2. Click **Run workflow**
+3. Select which stage should fail (or "none" for success)
+4. Observe automatic issue creation and analysis
 
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [Docker](https://www.docker.com/get-started)
-- [Docker Compose](https://docs.docker.com/compose/install/)
+### Documentation
 
-### Running Locally with Docker Compose
+- [Full Implementation Details](IMPLEMENTATION_SUMMARY.md)
+- [Workflow Configuration](.github/workflows/README.md)
+- [CI/CD Pipeline](.github/workflows/ci-pipeline.yml)
 
-The easiest way to run all services locally is using Docker Compose:
+### Features
 
-```bash
-# Build and start all services
-docker compose up --build
+- **Intelligent Failure Detection**: Monitors Build, Test, Docker, Docker Compose, and Kubernetes stages
+- **Detailed Issue Reports**: Includes logs, links, status tables, and actionable insights
+- **Smart Classification**: Automatically categorizes failures and applies relevant labels
+- **Duplicate Prevention**: Checks for existing issues before creating new ones
+- **Auto-Assignment**: Issues are automatically assigned to repository maintainers
+- **Auto-Closure**: Resolved issues close automatically when pipeline recovers
 
 # Run in detached mode
 docker compose up -d --build
