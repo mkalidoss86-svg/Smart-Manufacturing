@@ -83,3 +83,37 @@ logs/
 *.cache
 *.dll
 *.exe
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+venv/
+env/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+/tmp/
+*.tmp

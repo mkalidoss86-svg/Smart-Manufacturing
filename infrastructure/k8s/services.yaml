@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dataingestion-api
+  namespace: visionflow
+  labels:
+    app: dataingestion-api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 5001
+    protocol: TCP
+    name: http
+  selector:
+    app: dataingestion-api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qualityanalytics-api
+  namespace: visionflow
+  labels:
+    app: qualityanalytics-api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 5002
+    protocol: TCP
+    name: http
+  selector:
+    app: qualityanalytics-api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertnotification-api
+  namespace: visionflow
+  labels:
+    app: alertnotification-api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 5003
+    protocol: TCP
+    name: http
+  selector:
+    app: alertnotification-api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard-api
+  namespace: visionflow
+  labels:
+    app: dashboard-api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 5004
+    protocol: TCP
+    name: http
+  selector:
+    app: dashboard-api
