@@ -1,0 +1,6 @@
+@VisionFlow.IngestionApi_HostAddress = http://localhost:5080
+
+GET {{VisionFlow.IngestionApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
