@@ -1,6 +1,52 @@
 version: '3.8'
 
 services:
+  # RabbitMQ for message queue
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - visionflow-network
+    restart: unless-stopped
+
+  # Inspection Worker Service
+  inspection-worker:
+    build:
+      context: ./src/InspectionWorker
+      dockerfile: Dockerfile
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RabbitMq__HostName: rabbitmq
+      RabbitMq__Port: 5672
+      RabbitMq__UserName: guest
+      RabbitMq__Password: guest
+      ASPNETCORE_ENVIRONMENT: Production
+    restart: unless-stopped
+    networks:
+      - visionflow-network
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
   dataingestion-api:
     build:
       context: ./src/DataIngestion.API
@@ -53,6 +99,9 @@ services:
       - visionflow-network
     restart: unless-stopped
 
+networks:
+  visionflow-network:
+    driver: bridge
   results-api:
     build:
       context: ./src/ResultsApi
