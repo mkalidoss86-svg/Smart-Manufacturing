@@ -41,9 +41,6 @@ artifacts/
 *.snupkg
 **/packages/*
 
-# Docker
-**/.dockerignore
-
 # OS Files
 .DS_Store
 Thumbs.db

@@ -12,12 +12,7 @@ services:
       - ASPNETCORE_URLS=http://+:5001
     networks:
       - visionflow-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    restart: unless-stopped
 
   qualityanalytics-api:
     build:
@@ -30,12 +25,7 @@ services:
       - ASPNETCORE_URLS=http://+:5002
     networks:
       - visionflow-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    restart: unless-stopped
 
   alertnotification-api:
     build:
@@ -48,12 +38,7 @@ services:
       - ASPNETCORE_URLS=http://+:5003
     networks:
       - visionflow-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    restart: unless-stopped
 
   dashboard-api:
     build:
@@ -66,12 +51,7 @@ services:
       - ASPNETCORE_URLS=http://+:5004
     networks:
       - visionflow-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5004/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    restart: unless-stopped
 
 networks:
   visionflow-network:
