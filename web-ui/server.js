@@ -1,4 +1,5 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const app = express();
 
@@ -9,6 +10,18 @@ const WEBSOCKET_URL = process.env.WEBSOCKET_URL || 'ws://localhost:5000/ws';
 const REFRESH_INTERVAL = process.env.REFRESH_INTERVAL || '5000';
 const MAX_DEFECTS_DISPLAY = process.env.MAX_DEFECTS_DISPLAY || '50';
 const MAX_NOTIFICATIONS = process.env.MAX_NOTIFICATIONS || '20';
+
+// Rate limiting configuration
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 1000, // Limit each IP to 1000 requests per windowMs
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Too many requests from this IP, please try again later.'
+});
+
+// Apply rate limiting to all routes
+app.use(limiter);
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
