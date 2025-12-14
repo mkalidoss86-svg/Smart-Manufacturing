@@ -34,6 +34,9 @@ print_status $? "Docker is installed"
 command -v docker compose >/dev/null 2>&1 || command -v docker-compose >/dev/null 2>&1
 print_status $? "Docker Compose is installed"
 
+command -v curl >/dev/null 2>&1
+print_status $? "curl is installed"
+
 echo ""
 
 # Validate Dockerfiles exist
@@ -109,11 +112,12 @@ echo ""
 echo "4. Checking for Secrets in Code..."
 echo "-----------------------------------"
 
-secret_patterns=("password" "secret" "api_key" "apikey" "private_key" "privatekey")
+# More specific patterns to avoid false positives
+secret_patterns=("\"password\":\s*\"" "\"secret\":\s*\"" "\"api_key\":\s*\"" "\"apikey\":\s*\"" "\"private_key\":\s*\"")
 secrets_found=0
 
 for pattern in "${secret_patterns[@]}"; do
-    if grep -ri "$pattern" src/*/appsettings*.json 2>/dev/null | grep -v "//"; then
+    if grep -rE "$pattern" src/*/appsettings*.json 2>/dev/null; then
         secrets_found=1
     fi
 done
@@ -135,7 +139,8 @@ echo ""
 build_success=0
 for service in "${services[@]}"; do
     echo "Building $service..."
-    if docker build -t "${service,,}:test" -f "src/$service/Dockerfile" "src/$service" > /dev/null 2>&1; then
+    service_lower=$(echo "$service" | tr '[:upper:]' '[:lower:]')
+    if docker build -t "${service_lower}:test" -f "src/$service/Dockerfile" "src/$service" > /dev/null 2>&1; then
         print_status 0 "$service built successfully"
         build_success=$((build_success + 1))
     else
