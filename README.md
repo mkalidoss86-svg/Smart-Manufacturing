@@ -69,24 +69,8 @@ A .NET 8 worker service that processes quality inspection requests from a messag
 - Horizontally scalable
 
 **Documentation:** [docs/INSPECTION-WORKER.md](docs/INSPECTION-WORKER.md)
+
 ### Other Platform Services
-
-### Inspection Worker Service
-
-A .NET 8 worker service that processes quality inspection requests from a message queue.
-
-**Key Features:**
-- Clean Architecture (Domain, Application, Infrastructure, Worker layers)
-- Event-driven processing with RabbitMQ
-- Strategy pattern for inspection logic
-- Retry and dead-letter queue patterns
-- Idempotent and stateless processing
-- Graceful shutdown support
-- Health checks and structured logging
-- Horizontally scalable
-
-**Documentation:** [docs/INSPECTION-WORKER.md](docs/INSPECTION-WORKER.md)
-
 
 - **DataIngestion API** (Port 5001): Ingests manufacturing data
 - **QualityAnalytics API** (Port 5002): Analyzes quality metrics
@@ -244,20 +228,17 @@ docker run -p 5106:8080 resultsapi:latest
 
 ## ☸️ Kubernetes Deployment
 
-Kubernetes manifests are located in `infrastructure/k8s/`:
+Kubernetes manifests are located in `k8s/`:
 
 ```bash
 # Create namespace
-kubectl apply -f infrastructure/k8s/namespace.yaml
+kubectl apply -f k8s/namespace.yaml
 
 # Apply ConfigMap
-kubectl apply -f infrastructure/k8s/configmap.yaml
+kubectl apply -f k8s/configmap.yaml
 
-# Deploy services
-kubectl apply -f infrastructure/k8s/deployments.yaml
-
-# Create services
-kubectl apply -f infrastructure/k8s/services.yaml
+# Deploy all services using kustomize
+kubectl apply -k k8s/
 
 # Check deployment status
 kubectl get pods -n visionflow

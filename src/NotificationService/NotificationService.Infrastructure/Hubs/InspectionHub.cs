@@ -25,10 +25,10 @@ public class InspectionHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    public async Task<long> GetLastSequenceNumber()
+    public Task<long> GetLastSequenceNumber()
     {
         var connectionId = Context.ConnectionId;
-        return _clientSequenceNumbers.TryGetValue(connectionId, out var sequenceNumber) ? sequenceNumber : 0;
+        return Task.FromResult(_clientSequenceNumbers.TryGetValue(connectionId, out var sequenceNumber) ? sequenceNumber : 0);
     }
 
     public Task UpdateSequenceNumber(long sequenceNumber)

@@ -12,6 +12,8 @@ resources:
   - quality-service.yaml
   - analytics-service.yaml
   - inspection-worker.yaml
+  - legacy-services-deployments.yaml
+  - legacy-services-services.yaml
 
 # Common labels applied to all resources
 labels:

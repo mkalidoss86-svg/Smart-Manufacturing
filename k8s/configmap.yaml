@@ -6,36 +6,43 @@ metadata:
   labels:
     app: visionflow
 data:
+  # Application Configuration
+  ASPNETCORE_ENVIRONMENT: "Production"
+  LOG_LEVEL: "Information"
+  APP_ENV: "production"
+
   # Database Configuration
   DB_HOST: "postgres-service"
   DB_PORT: "5432"
   DB_NAME: "visionflow"
-  
+
   # Redis Configuration
   REDIS_HOST: "redis-service"
   REDIS_PORT: "6379"
-  
+
   # Kafka Configuration
   KAFKA_BROKERS: "kafka-service:9092"
   KAFKA_TOPIC_QUALITY: "quality-events"
   KAFKA_TOPIC_INSPECTION: "inspection-events"
-  
-  # Application Configuration
-  LOG_LEVEL: "info"
-  APP_ENV: "production"
-  
+
   # API Gateway Configuration
   API_PORT: "8080"
   API_TIMEOUT: "30"
-  
+
   # Quality Service Configuration
   QUALITY_SERVICE_PORT: "8081"
   ANOMALY_THRESHOLD: "0.85"
-  
+
   # Analytics Service Configuration
   ANALYTICS_SERVICE_PORT: "8082"
   BATCH_SIZE: "100"
-  
+
   # Inspection Worker Configuration
   WORKER_CONCURRENCY: "4"
   WORKER_PREFETCH_COUNT: "10"
+
+  # Service URLs (for inter-service communication)
+  DATAINGESTION_API_URL: "http://dataingestion-api"
+  QUALITYANALYTICS_API_URL: "http://qualityanalytics-api"
+  ALERTNOTIFICATION_API_URL: "http://alertnotification-api"
+  DASHBOARD_API_URL: "http://dashboard-api"
