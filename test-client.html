@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VisionFlow - Notification Service Test Client</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        .panel h2 {
+            margin-top: 0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        button.disconnect {
+            background-color: #f44336;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .messages {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 4px solid #4CAF50;
+            background-color: white;
+        }
+        .message.error {
+            border-left-color: #f44336;
+        }
+        .message-time {
+            font-size: 0.8em;
+            color: #666;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 150px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>VisionFlow Notification Service - Test Client</h1>
+    
+    <div class="container">
+        <div class="panel">
+            <h2>Connection</h2>
+            <input type="text" id="hubUrl" value="http://localhost:5019/hubs/inspections" placeholder="SignalR Hub URL" />
+            <div id="status" class="status disconnected">Disconnected</div>
+            <button id="connectBtn" onclick="connect()">Connect</button>
+            <button id="disconnectBtn" class="disconnect" onclick="disconnect()" disabled>Disconnect</button>
+            <button onclick="subscribe()">Subscribe to Inspections</button>
+            <button onclick="getMissedEvents()">Get Missed Events</button>
+            
+            <h3>Statistics</h3>
+            <div>Last Sequence: <span id="lastSequence">0</span></div>
+            <div>Messages Received: <span id="msgCount">0</span></div>
+        </div>
+        
+        <div class="panel">
+            <h2>Publish Inspection Result</h2>
+            <textarea id="inspectionData">{
+  "id": "INS-001",
+  "productId": "PROD-123",
+  "status": "Failed",
+  "severity": "High",
+  "message": "Detected surface defect",
+  "timestamp": "2025-12-14T10:30:00Z",
+  "metadata": {
+    "defectType": "Scratch",
+    "location": "Top-Right",
+    "confidence": 0.95
+  }
+}</textarea>
+            <button onclick="publishInspection()">Publish via REST API</button>
+        </div>
+    </div>
+    
+    <div class="panel" style="margin-top: 20px;">
+        <h2>Messages</h2>
+        <button onclick="clearMessages()">Clear Messages</button>
+        <div id="messages" class="messages"></div>
+    </div>
+
+    <script>
+        let connection = null;
+        let messageCount = 0;
+        let lastSequence = 0;
+
+        function addMessage(message, isError = false) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message' + (isError ? ' error' : '');
+            
+            const now = new Date().toLocaleTimeString();
+            messageDiv.innerHTML = `
+                <div class="message-time">${now}</div>
+                <pre>${message}</pre>
+            `;
+            
+            messagesDiv.insertBefore(messageDiv, messagesDiv.firstChild);
+            messageCount++;
+            document.getElementById('msgCount').textContent = messageCount;
+        }
+
+        function updateStatus(connected) {
+            const statusDiv = document.getElementById('status');
+            if (connected) {
+                statusDiv.className = 'status connected';
+                statusDiv.textContent = 'Connected';
+            } else {
+                statusDiv.className = 'status disconnected';
+                statusDiv.textContent = 'Disconnected';
+            }
+            document.getElementById('connectBtn').disabled = connected;
+            document.getElementById('disconnectBtn').disabled = !connected;
+        }
+
+        async function connect() {
+            const hubUrl = document.getElementById('hubUrl').value;
+            
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl(hubUrl)
+                .withAutomaticReconnect()
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+            connection.on("Connected", (data) => {
+                addMessage(`Connected: ${JSON.stringify(data, null, 2)}`);
+            });
+
+            connection.on("InspectionUpdate", (data) => {
+                addMessage(`Inspection Update:\n${JSON.stringify(data, null, 2)}`);
+                if (data.sequenceNumber) {
+                    lastSequence = data.sequenceNumber;
+                    document.getElementById('lastSequence').textContent = lastSequence;
+                }
+            });
+
+            connection.on("NotificationEvent", (data) => {
+                addMessage(`Notification Event:\n${JSON.stringify(data, null, 2)}`);
+                if (data.sequenceNumber) {
+                    lastSequence = data.sequenceNumber;
+                    document.getElementById('lastSequence').textContent = lastSequence;
+                }
+            });
+
+            connection.on("Subscribed", (topic) => {
+                addMessage(`Subscribed to: ${topic}`);
+            });
+
+            connection.on("Unsubscribed", (topic) => {
+                addMessage(`Unsubscribed from: ${topic}`);
+            });
+
+            connection.onreconnecting((error) => {
+                addMessage(`Reconnecting... ${error}`, true);
+                updateStatus(false);
+            });
+
+            connection.onreconnected((connectionId) => {
+                addMessage(`Reconnected with ID: ${connectionId}`);
+                updateStatus(true);
+            });
+
+            connection.onclose((error) => {
+                addMessage(`Connection closed: ${error}`, true);
+                updateStatus(false);
+            });
+
+            try {
+                await connection.start();
+                addMessage("Connection started successfully");
+                updateStatus(true);
+            } catch (err) {
+                addMessage(`Connection failed: ${err}`, true);
+                updateStatus(false);
+            }
+        }
+
+        async function disconnect() {
+            if (connection) {
+                await connection.stop();
+                addMessage("Disconnected");
+                updateStatus(false);
+            }
+        }
+
+        async function subscribe() {
+            if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                try {
+                    await connection.invoke("SubscribeToInspections");
+                } catch (err) {
+                    addMessage(`Subscribe failed: ${err}`, true);
+                }
+            } else {
+                addMessage("Not connected", true);
+            }
+        }
+
+        async function publishInspection() {
+            const data = document.getElementById('inspectionData').value;
+            const hubUrl = document.getElementById('hubUrl').value;
+            const baseUrl = hubUrl.replace('/hubs/inspections', '');
+            
+            try {
+                const response = await fetch(`${baseUrl}/api/inspections`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: data
+                });
+                
+                const result = await response.json();
+                addMessage(`Published: ${JSON.stringify(result, null, 2)}`);
+            } catch (err) {
+                addMessage(`Publish failed: ${err}`, true);
+            }
+        }
+
+        async function getMissedEvents() {
+            const hubUrl = document.getElementById('hubUrl').value;
+            const baseUrl = hubUrl.replace('/hubs/inspections', '');
+            
+            try {
+                const response = await fetch(
+                    `${baseUrl}/api/inspections/missed-events?lastSequenceNumber=${lastSequence}&maxCount=10`
+                );
+                const events = await response.json();
+                addMessage(`Missed Events (${events.length}):\n${JSON.stringify(events, null, 2)}`);
+            } catch (err) {
+                addMessage(`Get missed events failed: ${err}`, true);
+            }
+        }
+
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+            messageCount = 0;
+            document.getElementById('msgCount').textContent = messageCount;
+        }
+    </script>
+</body>
+</html>
