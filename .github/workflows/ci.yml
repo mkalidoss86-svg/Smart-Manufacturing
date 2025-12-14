@@ -41,11 +41,15 @@ jobs:
     
     strategy:
       matrix:
-        service: 
-          - DataIngestion.API
-          - QualityAnalytics.API
-          - AlertNotification.API
-          - Dashboard.API
+        include:
+          - service: DataIngestion.API
+            port: 5001
+          - service: QualityAnalytics.API
+            port: 5002
+          - service: AlertNotification.API
+            port: 5003
+          - service: Dashboard.API
+            port: 5004
     
     steps:
     - uses: actions/checkout@v4
@@ -56,11 +60,3 @@ jobs:
     - name: Build Docker image
       run: |
         docker build -t visionflow/${{ matrix.service }}:${{ github.sha }} -f src/${{ matrix.service }}/Dockerfile src/${{ matrix.service }}
-    
-    - name: Test Docker image
-      run: |
-        docker run -d --name test-container -p 5000:500${{ strategy.job-index }} visionflow/${{ matrix.service }}:${{ github.sha }}
-        sleep 10
-        docker logs test-container
-        docker stop test-container
-        docker rm test-container

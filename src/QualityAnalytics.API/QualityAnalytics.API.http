@@ -1,6 +1,11 @@
-@QualityAnalytics.API_HostAddress = http://localhost:5030
+@QualityAnalytics.API_HostAddress = http://localhost:5002
 
-GET {{QualityAnalytics.API_HostAddress}}/weatherforecast/
+GET {{QualityAnalytics.API_HostAddress}}/health
+Accept: application/json
+
+###
+
+GET {{QualityAnalytics.API_HostAddress}}/
 Accept: application/json
 
 ###

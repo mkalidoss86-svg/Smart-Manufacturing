@@ -1,6 +1,11 @@
-@Dashboard.API_HostAddress = http://localhost:5221
+@Dashboard.API_HostAddress = http://localhost:5004
 
-GET {{Dashboard.API_HostAddress}}/weatherforecast/
+GET {{Dashboard.API_HostAddress}}/health
+Accept: application/json
+
+###
+
+GET {{Dashboard.API_HostAddress}}/
 Accept: application/json
 
 ###

@@ -1,6 +1,11 @@
-@DataIngestion.API_HostAddress = http://localhost:5017
+@DataIngestion.API_HostAddress = http://localhost:5001
 
-GET {{DataIngestion.API_HostAddress}}/weatherforecast/
+GET {{DataIngestion.API_HostAddress}}/health
+Accept: application/json
+
+###
+
+GET {{DataIngestion.API_HostAddress}}/
 Accept: application/json
 
 ###
