@@ -28,8 +28,16 @@ class WebSocketClient {
                 
                 if (!this.isIntentionallyClosed && this.reconnectAttempts < this.maxReconnectAttempts) {
                     this.reconnectAttempts++;
-                    console.log(`Reconnecting... Attempt ${this.reconnectAttempts}`);
-                    setTimeout(() => this.connect(), this.reconnectDelay);
+                    // Exponential backoff with jitter
+                    const backoffTime = Math.min(
+                        this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1),
+                        30000 // Max 30 seconds
+                    );
+                    const jitter = Math.random() * 1000;
+                    const delay = backoffTime + jitter;
+                    
+                    console.log(`Reconnecting in ${Math.round(delay / 1000)}s... Attempt ${this.reconnectAttempts}`);
+                    setTimeout(() => this.connect(), delay);
                 }
             };
 

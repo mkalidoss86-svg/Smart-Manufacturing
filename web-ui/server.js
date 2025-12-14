@@ -16,15 +16,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Inject environment variables
 app.get('/env.js', (req, res) => {
     res.type('application/javascript');
-    res.send(`
-        window.ENV = {
-            API_BASE_URL: '${API_BASE_URL}',
-            WEBSOCKET_URL: '${WEBSOCKET_URL}',
-            REFRESH_INTERVAL: '${REFRESH_INTERVAL}',
-            MAX_DEFECTS_DISPLAY: '${MAX_DEFECTS_DISPLAY}',
-            MAX_NOTIFICATIONS: '${MAX_NOTIFICATIONS}'
-        };
-    `);
+    const config = {
+        API_BASE_URL,
+        WEBSOCKET_URL,
+        REFRESH_INTERVAL,
+        MAX_DEFECTS_DISPLAY,
+        MAX_NOTIFICATIONS
+    };
+    res.send(`window.ENV = ${JSON.stringify(config)};`);
 });
 
 // Health check endpoint
@@ -42,7 +41,7 @@ app.get('*', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`VisionFlow Web UI running on port ${PORT}`);
     console.log(`Environment configuration:`);
     console.log(`  API_BASE_URL: ${API_BASE_URL}`);
@@ -51,12 +50,19 @@ app.listen(PORT, () => {
 });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
-    console.log('SIGTERM signal received: closing HTTP server');
-    process.exit(0);
-});
+const gracefulShutdown = (signal) => {
+    console.log(`${signal} signal received: closing HTTP server`);
+    server.close(() => {
+        console.log('HTTP server closed');
+        process.exit(0);
+    });
+    
+    // Force shutdown after 10 seconds
+    setTimeout(() => {
+        console.error('Forced shutdown after timeout');
+        process.exit(1);
+    }, 10000);
+};
 
-process.on('SIGINT', () => {
-    console.log('SIGINT signal received: closing HTTP server');
-    process.exit(0);
-});
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));

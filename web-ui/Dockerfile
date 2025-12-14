@@ -6,7 +6,9 @@ WORKDIR /app
 COPY package.json ./
 
 # Install dependencies
-RUN npm config set strict-ssl false && npm install --production
+# Note: SSL verification is temporarily disabled due to build environment constraints
+# In production, use a properly configured npm registry with valid certificates
+RUN npm config set strict-ssl false && npm install --omit=dev
 
 # Copy application files
 COPY . .
