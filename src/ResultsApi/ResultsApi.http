@@ -1,0 +1,52 @@
+@ResultsApi_HostAddress = http://localhost:5106
+
+# Health Check
+GET {{ResultsApi_HostAddress}}/health
+Accept: application/json
+
+###
+
+# Create Inspection Result
+POST {{ResultsApi_HostAddress}}/api/results
+Content-Type: application/json
+
+{
+  "lineId": "line-001",
+  "status": "Pass",
+  "timestamp": "2025-12-14T07:00:00Z",
+  "productId": "PROD-12345",
+  "confidenceScore": 0.98
+}
+
+###
+
+# Get All Results
+GET {{ResultsApi_HostAddress}}/api/results
+Accept: application/json
+
+###
+
+# Query by Line ID
+GET {{ResultsApi_HostAddress}}/api/results?lineId=line-001
+Accept: application/json
+
+###
+
+# Query by Status
+GET {{ResultsApi_HostAddress}}/api/results?status=Pass
+Accept: application/json
+
+###
+
+# Query with Pagination
+GET {{ResultsApi_HostAddress}}/api/results?page=1&pageSize=10
+Accept: application/json
+
+###
+
+# Get Result by ID (replace with actual ID)
+GET {{ResultsApi_HostAddress}}/api/results/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+###
+

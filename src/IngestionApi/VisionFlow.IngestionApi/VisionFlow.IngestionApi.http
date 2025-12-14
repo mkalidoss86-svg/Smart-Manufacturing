@@ -1,0 +1,77 @@
+@VisionFlow.IngestionApi_HostAddress = http://localhost:5000
+
+### Health Check
+GET {{VisionFlow.IngestionApi_HostAddress}}/health
+Accept: text/plain
+
+###
+
+### Ingest Quality Event - Valid Request
+POST {{VisionFlow.IngestionApi_HostAddress}}/api/events?lineId=LINE-001
+Content-Type: application/json
+
+{
+  "productId": "PROD-12345",
+  "batchId": "BATCH-2024-001",
+  "stationId": "STATION-A1",
+  "qualityMetrics": {
+    "temperature": 45.5,
+    "pressure": 120.0,
+    "viscosity": 2.3
+  },
+  "status": "Pass",
+  "additionalData": {
+    "operator": "John Doe",
+    "shift": "Morning"
+  }
+}
+
+###
+
+### Ingest Quality Event - Fail Status
+POST {{VisionFlow.IngestionApi_HostAddress}}/api/events?lineId=LINE-002
+Content-Type: application/json
+
+{
+  "productId": "PROD-67890",
+  "batchId": "BATCH-2024-002",
+  "stationId": "STATION-B2",
+  "qualityMetrics": {
+    "temperature": 62.8,
+    "pressure": 145.0
+  },
+  "status": "Fail"
+}
+
+###
+
+### Ingest Quality Event - Invalid (Missing ProductId)
+POST {{VisionFlow.IngestionApi_HostAddress}}/api/events?lineId=LINE-001
+Content-Type: application/json
+
+{
+  "productId": "",
+  "batchId": "BATCH-2024-001",
+  "qualityMetrics": {
+    "temperature": 45.5
+  },
+  "status": "Pass"
+}
+
+###
+
+### Ingest Quality Event - Invalid (Bad Status)
+POST {{VisionFlow.IngestionApi_HostAddress}}/api/events?lineId=LINE-001
+Content-Type: application/json
+
+{
+  "productId": "PROD-12345",
+  "batchId": "BATCH-2024-001",
+  "qualityMetrics": {
+    "temperature": 45.5
+  },
+  "status": "InvalidStatus"
+}
+
+###
+
