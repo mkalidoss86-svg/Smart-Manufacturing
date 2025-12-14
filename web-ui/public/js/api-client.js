@@ -55,6 +55,22 @@ class ApiClient {
     async getAnomalies(limit = 50) {
         return this.fetch(`/anomalies?limit=${limit}`);
     }
+
+    // Get manufacturing events (from simulator)
+    async getManufacturingEvents(params = {}) {
+        const queryString = new URLSearchParams(params).toString();
+        return this.fetch(`/events?${queryString}`);
+    }
+
+    // Get recent manufacturing events
+    async getRecentEvents(count = 100) {
+        return this.fetch(`/events/recent?count=${count}`);
+    }
+
+    // Get production line stats
+    async getProductionLineStats() {
+        return this.fetch(`/stats/production-lines`);
+    }
 }
 
 // Export for use in other modules

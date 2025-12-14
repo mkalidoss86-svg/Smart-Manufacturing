@@ -70,6 +70,38 @@ A .NET 8 worker service that processes quality inspection requests from a messag
 
 **Documentation:** [docs/INSPECTION-WORKER.md](docs/INSPECTION-WORKER.md)
 
+### Manufacturing Data Simulator
+
+A comprehensive data simulation system for generating realistic manufacturing quality data.
+
+**Key Features:**
+- **Clean Architecture**: Domain, Application, Infrastructure, and API layers with proper separation of concerns
+- **Design Patterns**: Factory, Strategy, Repository, and Observer patterns
+- **Configurable Generation**: Adjustable event rates, defect percentages, and production lines
+- **Real-time Publishing**: SignalR integration for live updates
+- **Persistent Storage**: SQLite (dev) and PostgreSQL (prod) support with EF Core
+- **REST API**: Full CRUD operations with filtering, pagination, and statistics
+- **Worker Service**: Continuous background simulation with burst mode
+- **Comprehensive Testing**: 16 unit and integration tests with 100% pass rate
+- **Docker Ready**: Containerized API and Worker with docker-compose integration
+- **Web UI Integration**: Dashboard displays production lines, defects, and live metrics
+
+**Quick Start:**
+```bash
+# Start simulator with docker-compose
+docker compose up simulator-api simulator-worker
+
+# Access API
+curl http://localhost:5200/api/events/recent?count=10
+
+# View Swagger UI
+open http://localhost:5200/swagger
+```
+
+**Documentation:**
+- [Quick Start Guide](src/ManufacturingDataSimulator.Api/README.md)
+- [Full Documentation](docs/MANUFACTURING_DATA_SIMULATOR.md)
+
 ### Other Platform Services
 
 - **DataIngestion API** (Port 5001): Ingests manufacturing data
@@ -147,6 +179,7 @@ Services will be available at:
 - Dashboard API: http://localhost:5004
 - Results API: http://localhost:5106 (HTTP) or https://localhost:7081 (HTTPS)
 - Notification Service: http://localhost:8080 (HTTP) or http://localhost:8081 (SignalR)
+- Simulator API: http://localhost:5200
 - Web UI: http://localhost:8080
 
 ### Running Individual Services

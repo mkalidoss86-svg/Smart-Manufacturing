@@ -143,6 +143,55 @@ services:
         - visionflow-network
       command: redis-server --appendonly yes
       restart: unless-stopped
+
+  simulator-api:
+    build:
+      context: .
+      dockerfile: src/ManufacturingDataSimulator.Api/Dockerfile
+    ports:
+      - "5200:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__ManufacturingDb=Data Source=/data/manufacturing.db
+      - Database__Provider=sqlite
+      - Simulator__EventRatePerSecond=2
+      - Simulator__DefectPercentage=10.0
+      - Simulator__ProductionLines__0=Line-A
+      - Simulator__ProductionLines__1=Line-B
+      - Simulator__ProductionLines__2=Line-C
+      - NotificationService__HubUrl=http://notification-service:8080/hubs/inspection
+    volumes:
+      - simulator-data:/data
+    networks:
+      - visionflow-network
+    restart: unless-stopped
+    depends_on:
+      - notification-service
+
+  simulator-worker:
+    build:
+      context: .
+      dockerfile: src/ManufacturingDataSimulator.Worker/Dockerfile
+    environment:
+      - ConnectionStrings__ManufacturingDb=Data Source=/data/manufacturing.db
+      - Database__Provider=sqlite
+      - Simulator__EventRatePerSecond=2
+      - Simulator__DefectPercentage=10.0
+      - Simulator__EnableBurstMode=false
+      - Simulator__ContinuousMode=true
+      - Simulator__ProductionLines__0=Line-A
+      - Simulator__ProductionLines__1=Line-B
+      - Simulator__ProductionLines__2=Line-C
+      - NotificationService__HubUrl=http://notification-service:8080/hubs/inspection
+    volumes:
+      - simulator-data:/data
+    networks:
+      - visionflow-network
+    restart: unless-stopped
+    depends_on:
+      - notification-service
+      - simulator-api
   
 networks:
     visionflow-network:
@@ -150,4 +199,5 @@ networks:
   
 volumes:
     redis-data:
+    simulator-data:
 
