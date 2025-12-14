@@ -1,0 +1,11 @@
+@Dashboard.API_HostAddress = http://localhost:5004
+
+GET {{Dashboard.API_HostAddress}}/health
+Accept: application/json
+
+###
+
+GET {{Dashboard.API_HostAddress}}/
+Accept: application/json
+
+###
