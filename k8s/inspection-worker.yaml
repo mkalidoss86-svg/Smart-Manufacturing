@@ -89,22 +89,26 @@ spec:
             cpu: "2000m"
             memory: "4Gi"
         readinessProbe:
+          # For production, implement a proper health endpoint (e.g., HTTP /health)
+          # or create a readiness indicator file that the worker manages
           exec:
             command:
             - /bin/sh
             - -c
-            - "pgrep -f inspection-worker || exit 1"
+            - "ps aux | grep -v grep | grep -q '[w]orker' || exit 1"
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 5
           successThreshold: 1
           failureThreshold: 3
         livenessProbe:
+          # For production, implement a proper health endpoint (e.g., HTTP /health)
+          # that verifies the worker can process messages
           exec:
             command:
             - /bin/sh
             - -c
-            - "pgrep -f inspection-worker || exit 1"
+            - "ps aux | grep -v grep | grep -q '[w]orker' || exit 1"
           initialDelaySeconds: 30
           periodSeconds: 15
           timeoutSeconds: 5

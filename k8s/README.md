@@ -185,3 +185,4 @@ kubectl get configmap visionflow-config -n visionflow -o yaml
 - No sensitive data is hardcoded; use Kubernetes Secrets for passwords/tokens
 - The platform is designed to work with external dependencies (Postgres, Redis, Kafka)
 - Health check endpoints are expected at `/health/ready` and `/health/live` for HTTP services
+- **Important**: The inspection-worker uses basic process-based health checks. For production deployments, implement proper health endpoints or status files that the worker application manages to accurately reflect its health and readiness state.
