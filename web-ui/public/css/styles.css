@@ -1,0 +1,366 @@
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --light-bg: #ecf0f1;
+    --dark-text: #2c3e50;
+    --border-color: #bdc3c7;
+    --card-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--light-bg);
+    color: var(--dark-text);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 30px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    box-shadow: var(--card-shadow);
+}
+
+header h1 {
+    font-size: 2.5em;
+    margin-bottom: 5px;
+}
+
+header .subtitle {
+    font-size: 1.1em;
+    opacity: 0.9;
+    margin-bottom: 15px;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-indicator.connected {
+    background-color: var(--success-color);
+    box-shadow: 0 0 10px var(--success-color);
+}
+
+.status-indicator.disconnected {
+    background-color: var(--danger-color);
+}
+
+.status-indicator.connecting {
+    background-color: var(--warning-color);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.panel {
+    background: white;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: var(--card-shadow);
+}
+
+.panel h2 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
+}
+
+/* System Health */
+.health-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.health-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: #f8f9fa;
+}
+
+.service-name {
+    font-weight: 600;
+}
+
+.health-status {
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.health-status.healthy {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.health-status.degraded {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.health-status.unhealthy {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+/* Production Lines */
+.lines-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.line-card {
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.line-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.line-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.line-header h3 {
+    color: var(--primary-color);
+    font-size: 1.2em;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.operational {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.status-badge.warning {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.status-badge.critical {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.line-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.metric {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.metric-label {
+    color: #7f8c8d;
+    font-size: 0.9em;
+}
+
+.metric-value {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* Defects Table */
+.defects-container {
+    overflow-x: auto;
+}
+
+.defects-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.defects-table thead {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.defects-table th,
+.defects-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.defects-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.defects-table .loading {
+    text-align: center;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+.severity {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.severity.high {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.severity.medium {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.severity.low {
+    background-color: var(--success-color);
+    color: white;
+}
+
+/* Notifications */
+.notifications-panel {
+    max-height: 400px;
+}
+
+.notifications-container {
+    max-height: 300px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.notification {
+    padding: 12px 15px;
+    border-radius: 6px;
+    border-left: 4px solid;
+    display: flex;
+    gap: 15px;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.notification.info {
+    background-color: #e3f2fd;
+    border-color: var(--secondary-color);
+}
+
+.notification.success {
+    background-color: #e8f5e9;
+    border-color: var(--success-color);
+}
+
+.notification.warning {
+    background-color: #fff3e0;
+    border-color: var(--warning-color);
+}
+
+.notification.error {
+    background-color: #ffebee;
+    border-color: var(--danger-color);
+}
+
+.notification-time {
+    font-size: 0.85em;
+    color: #7f8c8d;
+    min-width: 70px;
+}
+
+.notification-message {
+    flex: 1;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 20px;
+    color: #7f8c8d;
+    margin-top: 30px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.8em;
+    }
+    
+    .lines-grid,
+    .health-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .defects-table {
+        font-size: 0.85em;
+    }
+}

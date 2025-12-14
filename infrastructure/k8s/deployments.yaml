@@ -1,0 +1,195 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dataingestion-api
+  namespace: visionflow
+  labels:
+    app: dataingestion-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dataingestion-api
+  template:
+    metadata:
+      labels:
+        app: dataingestion-api
+    spec:
+      containers:
+      - name: dataingestion-api
+        image: dataingestion-api:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5001
+          protocol: TCP
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        - name: ASPNETCORE_URLS
+          value: "http://+:5001"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qualityanalytics-api
+  namespace: visionflow
+  labels:
+    app: qualityanalytics-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: qualityanalytics-api
+  template:
+    metadata:
+      labels:
+        app: qualityanalytics-api
+    spec:
+      containers:
+      - name: qualityanalytics-api
+        image: qualityanalytics-api:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5002
+          protocol: TCP
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        - name: ASPNETCORE_URLS
+          value: "http://+:5002"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5002
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5002
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertnotification-api
+  namespace: visionflow
+  labels:
+    app: alertnotification-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: alertnotification-api
+  template:
+    metadata:
+      labels:
+        app: alertnotification-api
+    spec:
+      containers:
+      - name: alertnotification-api
+        image: alertnotification-api:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5003
+          protocol: TCP
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        - name: ASPNETCORE_URLS
+          value: "http://+:5003"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5003
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5003
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard-api
+  namespace: visionflow
+  labels:
+    app: dashboard-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dashboard-api
+  template:
+    metadata:
+      labels:
+        app: dashboard-api
+    spec:
+      containers:
+      - name: dashboard-api
+        image: dashboard-api:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5004
+          protocol: TCP
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        - name: ASPNETCORE_URLS
+          value: "http://+:5004"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5004
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5004
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"

@@ -2,12 +2,13 @@
 
 The Smart Manufacturing Quality Platform is a scalable, event-driven quality intelligence system designed to monitor manufacturing processes in near real time, detect quality anomalies, and support autonomous decision-making through Agentic AI.
 
-## VisionFlow – Notification Service
+## Services
+
+### VisionFlow – Notification Service
 
 A real-time notification service built with .NET 8 and SignalR for pushing inspection updates to clients.
 
-### Features
-
+**Features:**
 - **Real-time Communication**: SignalR-based WebSocket connections for instant updates
 - **Clean Architecture**: Separated into Domain, Application, Infrastructure, and API layers
 - **Observer/Pub-Sub Pattern**: Decoupled event-driven architecture
@@ -17,42 +18,87 @@ A real-time notification service built with .NET 8 and SignalR for pushing inspe
 - **Health Monitoring**: Built-in health check endpoint
 - **Structured Logging**: JSON-formatted logs for easy monitoring
 
-### Architecture
+**Documentation:**
+- [Notification Service README](API.md)
+- [Deployment Guide](DEPLOYMENT.md)
 
-```
-├── NotificationService.Domain         # Core business entities and interfaces
-│   ├── Entities                       # InspectionResult, NotificationEvent
-│   └── Interfaces                     # INotificationPublisher, IEventStore
-├── NotificationService.Application    # Business logic and use cases
-│   ├── DTOs                          # Data transfer objects
-│   ├── Services                      # InspectionNotificationService
-│   └── Observers                     # Observer pattern interfaces
-├── NotificationService.Infrastructure # External concerns
-│   ├── Hubs                          # SignalR InspectionHub
-│   ├── Publishers                    # SignalR implementation
-│   └── EventStore                    # Redis-based event storage
-└── NotificationService.Api           # Web API host
-    └── Controllers                   # REST API endpoints
-```
+### Other Platform Services
+
+- **DataIngestion API** (Port 5001): Ingests manufacturing data
+- **QualityAnalytics API** (Port 5002): Analyzes quality metrics
+- **AlertNotification API** (Port 5003): Manages alerts and notifications
+- **Dashboard API** (Port 5004): Provides dashboard data
+
+## CI/CD Failure Analysis Agent
+
+This repository includes an automated CI/CD monitoring system that:
+- 🔍 Detects pipeline failures across all stages (Build, Test, Docker, Kubernetes)
+- 📋 Automatically creates detailed GitHub Issues with error analysis
+- 🏷️ Classifies failures and applies appropriate labels
+- 💡 Provides root cause suggestions and remediation steps
+- ✅ Auto-closes issues when subsequent pipeline runs succeed
+- 🚫 Prevents duplicate issues for the same commit
+
+### Quick Start
+
+The failure analysis agent runs automatically on every push or pull request. To test it manually:
+
+1. Go to **Actions** → **CI/CD Test - Simulated Failure**
+2. Click **Run workflow**
+3. Select which stage should fail (or "none" for success)
+4. Observe automatic issue creation and analysis
+
+### Documentation
+
+- [CI/CD Implementation Details](IMPLEMENTATION_SUMMARY.md)
+- [Workflow Configuration](.github/workflows/README.md)
+- [CI/CD Pipeline](.github/workflows/ci-pipeline.yml)
+
+### Features
+
+- **Intelligent Failure Detection**: Monitors Build, Test, Docker, Docker Compose, and Kubernetes stages
+- **Detailed Issue Reports**: Includes logs, links, status tables, and actionable insights
+- **Smart Classification**: Automatically categorizes failures and applies relevant labels
+- **Duplicate Prevention**: Checks for existing issues before creating new ones
+- **Auto-Assignment**: Issues are automatically assigned to repository maintainers
+- **Auto-Closure**: Resolved issues close automatically when pipeline recovers
+
+## Getting Started
 
 ### Prerequisites
 
 - .NET 8 SDK
-- Docker and Docker Compose (optional, for containerized deployment)
-- Redis (optional, for horizontal scaling)
+- Docker and Docker Compose
+- Redis (for Notification Service)
 
-### Getting Started
+### Running with Docker Compose
 
-#### Local Development (Without Redis)
+All services can be run together using Docker Compose:
 
-1. Build the solution:
 ```bash
-dotnet build VisionFlow.sln
+# Run in detached mode
+docker compose up -d --build
+
+# View logs
+docker compose logs -f
+
+# Stop all services
+docker compose down
 ```
 
-2. Run the service:
+Services will be available at:
+- DataIngestion API: http://localhost:5001
+- QualityAnalytics API: http://localhost:5002
+- AlertNotification API: http://localhost:5003
+- Dashboard API: http://localhost:5004
+- Notification Service: http://localhost:8080
+- Redis: localhost:6379
+
+### Running Notification Service Locally
+
 ```bash
 cd src/NotificationService/NotificationService.Api
+dotnet restore
 dotnet run
 ```
 
@@ -63,200 +109,80 @@ The service will be available at:
 - Health Check: /health
 - Swagger UI: /swagger
 
-#### Docker Deployment (With Redis)
+### Running Individual Services
 
-1. Build and start services:
+To run other services locally:
+
 ```bash
-docker-compose up --build
+# Navigate to service directory
+cd src/DataIngestion.API
+
+# Restore dependencies
+dotnet restore
+
+# Run the service
+dotnet run
 ```
 
-The service will be available at:
-- HTTP: http://localhost:8080
-- SignalR Hub: http://localhost:8080/hubs/inspections
-- Health Check: http://localhost:8080/health
-- Redis: localhost:6379
+## 🏥 Health Checks
 
-### API Endpoints
+Each service exposes a health endpoint at `/health`:
 
-#### POST /api/inspections
-Publish a new inspection result to all connected clients.
-
-**Request Body:**
-```json
-{
-  "id": "INS-001",
-  "productId": "PROD-123",
-  "status": "Failed",
-  "severity": "High",
-  "message": "Detected surface defect",
-  "timestamp": "2025-12-14T10:30:00Z",
-  "metadata": {
-    "defectType": "Scratch",
-    "location": "Top-Right",
-    "confidence": 0.95
-  }
-}
-```
-
-#### GET /api/inspections/missed-events
-Retrieve events missed during disconnection.
-
-**Query Parameters:**
-- `lastSequenceNumber`: Last received sequence number
-- `maxCount`: Maximum number of events to retrieve (default: 100)
-
-**Response:**
-```json
-[
-  {
-    "eventId": "evt-123",
-    "eventType": "InspectionUpdate",
-    "payload": { ... },
-    "createdAt": "2025-12-14T10:30:00Z",
-    "sequenceNumber": 42
-  }
-]
-```
-
-#### GET /api/inspections/latest-sequence
-Get the latest sequence number.
-
-**Response:**
-```json
-{
-  "sequenceNumber": 42
-}
-```
-
-### SignalR Hub Usage
-
-#### Connect to Hub
-```javascript
-const connection = new signalR.HubConnectionBuilder()
-    .withUrl("http://localhost:8080/hubs/inspections")
-    .withAutomaticReconnect()
-    .build();
-
-await connection.start();
-```
-
-#### Subscribe to Inspection Updates
-```javascript
-await connection.invoke("SubscribeToInspections");
-
-connection.on("InspectionUpdate", (inspectionResult) => {
-    console.log("Received inspection update:", inspectionResult);
-    // Update UI or process the result
-});
-```
-
-#### Handle Reconnection and Missed Events
-```javascript
-connection.onreconnected(async () => {
-    const lastSeq = localStorage.getItem("lastSequenceNumber") || 0;
-    
-    // Retrieve missed events
-    const response = await fetch(
-        `http://localhost:8080/api/inspections/missed-events?lastSequenceNumber=${lastSeq}`
-    );
-    const missedEvents = await response.json();
-    
-    // Process missed events
-    missedEvents.forEach(event => {
-        console.log("Missed event:", event);
-    });
-});
-
-connection.on("InspectionUpdate", (inspectionResult) => {
-    // Store latest sequence number
-    localStorage.setItem("lastSequenceNumber", inspectionResult.sequenceNumber);
-});
-```
-
-### Configuration
-
-#### appsettings.json
-
-```json
-{
-  "ConnectionStrings": {
-    "Redis": "localhost:6379"  // Empty for in-memory cache
-  },
-  "SignalR": {
-    "MaxMessageSize": 102400,
-    "ClientTimeoutSeconds": 60,
-    "KeepAliveSeconds": 30
-  },
-  "ConnectionLimits": {
-    "MaxConnections": 1000,
-    "MaxUpgradedConnections": 1000
-  },
-  "Cors": {
-    "AllowedOrigins": [
-      "http://localhost:3000",
-      "http://localhost:4200"
-    ]
-  }
-}
-```
-
-### Horizontal Scaling
-
-The service is designed for horizontal scaling using Redis as a backplane:
-
-1. Configure Redis connection string in appsettings.json
-2. Deploy multiple instances behind a load balancer
-3. SignalR will use Redis to synchronize messages across instances
-4. Each instance is stateless and can be scaled independently
-
-### Health Monitoring
-
-Check service health:
 ```bash
-curl http://localhost:8080/health
+curl http://localhost:5001/health  # DataIngestion
+curl http://localhost:5002/health  # QualityAnalytics
+curl http://localhost:5003/health  # AlertNotification
+curl http://localhost:5004/health  # Dashboard
+curl http://localhost:8080/health  # Notification Service
 ```
 
-### Logging
+## 📊 API Documentation
 
-The service uses structured JSON logging. Logs include:
-- Connection/disconnection events
-- Inspection result publications
-- Errors and exceptions
-- Performance metrics
+When running in Development mode, each service exposes Swagger UI:
 
-### Testing
+- DataIngestion API: http://localhost:5001/swagger
+- QualityAnalytics API: http://localhost:5002/swagger
+- AlertNotification API: http://localhost:5003/swagger
+- Dashboard API: http://localhost:5004/swagger
+- Notification Service: http://localhost:8080/swagger
 
-Run tests (if available):
+## 🐳 Docker
+
+Each service has its own Dockerfile located in its respective directory:
+
 ```bash
-dotnet test
+# Build individual service image
+docker build -t dataingestion-api:latest -f src/DataIngestion.API/Dockerfile src/DataIngestion.API
+
+# Run individual service
+docker run -p 5001:5001 -e ASPNETCORE_URLS=http://+:5001 dataingestion-api:latest
 ```
 
-### Production Deployment
+For Notification Service:
 
-1. Set environment variables:
-   - `ASPNETCORE_ENVIRONMENT=Production`
-   - `ConnectionStrings__Redis=<redis-connection-string>`
+```bash
+# Build
+docker build -t notification-service:latest .
 
-2. Configure reverse proxy (nginx, IIS, etc.) for:
-   - WebSocket support
-   - SSL/TLS termination
-   - Load balancing
+# Run with Redis
+docker run -p 8080:8080 \
+  -e ConnectionStrings__Redis=redis:6379 \
+  notification-service:latest
+```
 
-3. Monitor health endpoint for service availability
+## Architecture
 
-### Security Considerations
+The platform follows Clean Architecture principles with clear separation of concerns:
 
-- Enable CORS only for trusted origins
-- Use HTTPS in production
-- Implement authentication/authorization for SignalR connections
-- Configure connection limits to prevent DoS attacks
-- Use Redis password authentication in production
+- **Domain Layer**: Core business entities and interfaces
+- **Application Layer**: Business logic, services, DTOs, and use cases
+- **Infrastructure Layer**: External concerns (SignalR, Redis, etc.)
+- **API Layer**: REST controllers and ASP.NET Core hosting
 
-### License
+## License
 
 [Your License Here]
 
-### Support
+## Support
 
 For issues and questions, please open an issue in the repository.
-

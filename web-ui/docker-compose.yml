@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  web-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - API_BASE_URL=${API_BASE_URL:-http://api-gateway:5000/api}
+      - WEBSOCKET_URL=${WEBSOCKET_URL:-ws://api-gateway:5000/ws}
+      - REFRESH_INTERVAL=${REFRESH_INTERVAL:-5000}
+      - MAX_DEFECTS_DISPLAY=${MAX_DEFECTS_DISPLAY:-50}
+      - MAX_NOTIFICATIONS=${MAX_NOTIFICATIONS:-20}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/app/healthcheck.sh"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - visionflow-network
+
+networks:
+  visionflow-network:
+    driver: bridge

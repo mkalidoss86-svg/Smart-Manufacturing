@@ -1,6 +1,58 @@
 version: '3.8'
 
 services:
+  dataingestion-api:
+    build:
+      context: ./src/DataIngestion.API
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5001
+    networks:
+      - visionflow-network
+    restart: unless-stopped
+
+  qualityanalytics-api:
+    build:
+      context: ./src/QualityAnalytics.API
+      dockerfile: Dockerfile
+    ports:
+      - "5002:5002"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5002
+    networks:
+      - visionflow-network
+    restart: unless-stopped
+
+  alertnotification-api:
+    build:
+      context: ./src/AlertNotification.API
+      dockerfile: Dockerfile
+    ports:
+      - "5003:5003"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5003
+    networks:
+      - visionflow-network
+    restart: unless-stopped
+
+  dashboard-api:
+    build:
+      context: ./src/Dashboard.API
+      dockerfile: Dockerfile
+    ports:
+      - "5004:5004"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5004
+    networks:
+      - visionflow-network
+    restart: unless-stopped
+
   notification-service:
     build:
       context: .
