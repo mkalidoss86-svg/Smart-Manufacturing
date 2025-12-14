@@ -161,19 +161,25 @@ jobs:
     
     - name: Check service health
       run: |
-        echo "Checking DataIngestion API..."
-        curl -f http://localhost:5001/health || exit 1
+        services=(
+          "DataIngestion:5001"
+          "QualityAnalytics:5002"
+          "AlertNotification:5003"
+          "Dashboard:5004"
+        )
         
-        echo "Checking QualityAnalytics API..."
-        curl -f http://localhost:5002/health || exit 1
+        for service_info in "${services[@]}"; do
+          IFS=':' read -r name port <<< "$service_info"
+          echo "Checking ${name} API on port ${port}..."
+          if ! curl -f http://localhost:${port}/health; then
+            echo "❌ ${name} API health check failed"
+            exit 1
+          fi
+          echo "✅ ${name} API is healthy"
+        done
         
-        echo "Checking AlertNotification API..."
-        curl -f http://localhost:5003/health || exit 1
-        
-        echo "Checking Dashboard API..."
-        curl -f http://localhost:5004/health || exit 1
-        
-        echo "All services are healthy!"
+        echo ""
+        echo "🎉 All services are healthy!"
     
     - name: Show service logs on failure
       if: failure()
