@@ -2,6 +2,7 @@
 class VisionFlowApp {
     constructor() {
         this.apiClient = new ApiClient(window.APP_CONFIG.API_BASE_URL);
+        this.simulatorApiClient = new ApiClient(window.APP_CONFIG.SIMULATOR_API_URL);
         this.wsClient = new WebSocketClient(window.APP_CONFIG.WEBSOCKET_URL);
         this.notifications = [];
         this.refreshInterval = null;
@@ -168,11 +169,55 @@ class VisionFlowApp {
 
     async loadProductionLines() {
         try {
-            const lines = await this.apiClient.getProductionLines();
+            // Try to get production line stats from simulator API
+            const stats = await this.simulatorApiClient.getProductionLineStats();
+            const recentEvents = await this.simulatorApiClient.getRecentEvents(100);
+            
+            // Group events by production line
+            const lineData = {};
+            for (const event of recentEvents) {
+                if (!lineData[event.productionLine]) {
+                    lineData[event.productionLine] = {
+                        name: event.productionLine,
+                        events: [],
+                        passCount: 0,
+                        failCount: 0,
+                        warningCount: 0
+                    };
+                }
+                lineData[event.productionLine].events.push(event);
+                if (event.status === 'Pass') lineData[event.productionLine].passCount++;
+                else if (event.status === 'Fail') lineData[event.productionLine].failCount++;
+                else if (event.status === 'Warning') lineData[event.productionLine].warningCount++;
+            }
+            
+            // Calculate metrics for each line
+            const lines = Object.values(lineData).map(line => {
+                const total = line.events.length;
+                const qualityScore = total > 0 ? (line.passCount / total) * 100 : 0;
+                const defectRate = total > 0 ? ((line.failCount + line.warningCount) / total) * 100 : 0;
+                const status = defectRate < 5 ? 'NORMAL' : defectRate < 15 ? 'WARNING' : 'CRITICAL';
+                
+                return {
+                    id: line.name,
+                    name: line.name,
+                    status: status,
+                    qualityScore: qualityScore,
+                    defectRate: defectRate,
+                    throughput: Math.round(total * 3.6) // Approximate units/hour
+                };
+            });
+            
             this.renderProductionLines(lines);
         } catch (error) {
             console.error('Failed to load production lines:', error);
-            this.renderProductionLinesError();
+            // Fallback to original API if simulator fails
+            try {
+                const lines = await this.apiClient.getProductionLines();
+                this.renderProductionLines(lines);
+            } catch (fallbackError) {
+                this.renderProductionLinesError();
+            }
         }
     }
 
@@ -228,11 +273,31 @@ class VisionFlowApp {
 
     async loadDefects() {
         try {
-            const defects = await this.apiClient.getDefects(window.APP_CONFIG.MAX_DEFECTS_DISPLAY);
+            // Try to get defects from simulator API
+            const events = await this.simulatorApiClient.getRecentEvents(window.APP_CONFIG.MAX_DEFECTS_DISPLAY);
+            
+            // Filter to only defects (non-Pass status)
+            const defects = events
+                .filter(e => e.status !== 'Pass')
+                .map(e => ({
+                    timestamp: e.timestamp,
+                    lineId: e.productionLine,
+                    line: e.productionLine,
+                    type: e.defectType,
+                    severity: e.severity,
+                    description: `${e.defectType} detected in ${e.productId} (Batch: ${e.batchId})`
+                }));
+            
             this.renderDefects(defects);
         } catch (error) {
             console.error('Failed to load defects:', error);
-            this.renderDefectsError();
+            // Fallback to original API if simulator fails
+            try {
+                const defects = await this.apiClient.getDefects(window.APP_CONFIG.MAX_DEFECTS_DISPLAY);
+                this.renderDefects(defects);
+            } catch (fallbackError) {
+                this.renderDefectsError();
+            }
         }
     }
 
