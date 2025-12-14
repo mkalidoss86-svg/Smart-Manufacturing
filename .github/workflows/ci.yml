@@ -41,11 +41,12 @@ jobs:
     
     - name: Run unit tests for ${{ matrix.service }}
       run: |
-        if dotnet test src/${{ matrix.service }}/${{ matrix.service }}.csproj --configuration Release --no-build --verbosity normal --list-tests 2>/dev/null | grep -q "The following Tests are available"; then
+        echo "Checking for tests in ${{ matrix.service }}..."
+        if dotnet test src/${{ matrix.service }}/${{ matrix.service }}.csproj --configuration Release --no-build --verbosity normal --list-tests 2>&1 | grep -q "Test run for"; then
           echo "Running tests for ${{ matrix.service }}"
           dotnet test src/${{ matrix.service }}/${{ matrix.service }}.csproj --configuration Release --no-build --verbosity normal
         else
-          echo "No tests found for ${{ matrix.service }}"
+          echo "No tests found for ${{ matrix.service }}, skipping test execution"
         fi
 
   docker-build:
