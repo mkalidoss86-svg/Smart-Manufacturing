@@ -99,9 +99,6 @@ services:
       - visionflow-network
     restart: unless-stopped
 
-networks:
-  visionflow-network:
-    driver: bridge
   results-api:
     build:
       context: ./src/ResultsApi
