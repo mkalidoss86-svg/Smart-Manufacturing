@@ -1,4 +1,4 @@
-namespace InspectionWorker.Domain.Entities;
+namespace InspectionWorker.Domain.Enums;
 
 public enum InspectionStatus
 {

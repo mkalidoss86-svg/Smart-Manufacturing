@@ -1,4 +1,5 @@
 using InspectionWorker.Domain.Entities;
+using InspectionWorker.Domain.Enums;
 using InspectionWorker.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -7,7 +8,6 @@ namespace InspectionWorker.Application.Strategies;
 public class SimulatedInspectionStrategy : IInspectionStrategy
 {
     private readonly ILogger<SimulatedInspectionStrategy> _logger;
-    private readonly Random _random = new();
 
     public SimulatedInspectionStrategy(ILogger<SimulatedInspectionStrategy> logger)
     {
@@ -19,8 +19,8 @@ public class SimulatedInspectionStrategy : IInspectionStrategy
         _logger.LogInformation("Inspecting product {ProductId} from request {RequestId}", 
             request.ProductId, request.RequestId);
 
-        // Simulate inspection logic with weighted probabilities
-        var randomValue = _random.NextDouble();
+        // Simulate inspection logic with weighted probabilities (using Random.Shared for thread safety)
+        var randomValue = Random.Shared.NextDouble();
         var status = randomValue switch
         {
             < 0.70 => InspectionStatus.Pass,      // 70% pass
@@ -35,10 +35,10 @@ public class SimulatedInspectionStrategy : IInspectionStrategy
             BatchId = request.BatchId,
             Status = status,
             InspectedAt = DateTime.UtcNow,
-            ConfidenceScore = _random.NextDouble() * 0.3 + 0.7, // 0.7 to 1.0
+            ConfidenceScore = Random.Shared.NextDouble() * 0.3 + 0.7, // 0.7 to 1.0
             Metadata = new Dictionary<string, object>
             {
-                { "InspectionDurationMs", _random.Next(50, 200) },
+                { "InspectionDurationMs", Random.Shared.Next(50, 200) },
                 { "InspectorVersion", "1.0.0" }
             }
         };
@@ -46,11 +46,11 @@ public class SimulatedInspectionStrategy : IInspectionStrategy
         if (status == InspectionStatus.Defect)
         {
             result.DefectType = GetRandomDefectType();
-            result.Metadata["DefectSeverity"] = _random.Next(1, 10);
+            result.Metadata["DefectSeverity"] = Random.Shared.Next(1, 10);
         }
         else if (status == InspectionStatus.Anomaly)
         {
-            result.Metadata["AnomalyScore"] = _random.NextDouble();
+            result.Metadata["AnomalyScore"] = Random.Shared.NextDouble();
         }
 
         _logger.LogInformation("Inspection completed for {RequestId}: Status={Status}, Confidence={Confidence:F2}", 
@@ -62,6 +62,6 @@ public class SimulatedInspectionStrategy : IInspectionStrategy
     private string GetRandomDefectType()
     {
         var defectTypes = new[] { "Scratch", "Dent", "Misalignment", "Discoloration", "Crack" };
-        return defectTypes[_random.Next(defectTypes.Length)];
+        return defectTypes[Random.Shared.Next(defectTypes.Length)];
     }
 }

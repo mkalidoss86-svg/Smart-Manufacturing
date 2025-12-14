@@ -146,7 +146,7 @@ public class RabbitMqConsumer : IDisposable
             return value switch
             {
                 int intValue => intValue,
-                byte[] byteValue => BitConverter.ToInt32(byteValue, 0),
+                byte[] byteValue when byteValue.Length >= 4 => BitConverter.ToInt32(byteValue, 0),
                 _ => 0
             };
         }

@@ -1,3 +1,5 @@
+using InspectionWorker.Domain.Enums;
+
 namespace InspectionWorker.Domain.Entities;
 
 public class InspectionResult

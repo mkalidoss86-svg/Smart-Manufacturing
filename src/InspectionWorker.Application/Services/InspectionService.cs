@@ -9,8 +9,9 @@ public class InspectionService : IInspectionService
 {
     private readonly IInspectionStrategy _inspectionStrategy;
     private readonly ILogger<InspectionService> _logger;
-    private readonly HashSet<string> _processedRequests = new();
+    private readonly Dictionary<string, DateTime> _processedRequests = new();
     private readonly object _lock = new();
+    private readonly TimeSpan _idempotencyWindow = TimeSpan.FromHours(1); // Track requests for 1 hour
 
     public InspectionService(
         IInspectionStrategy inspectionStrategy,
@@ -22,15 +23,18 @@ public class InspectionService : IInspectionService
 
     public Task<InspectionResult> ProcessInspectionAsync(InspectionRequest request, CancellationToken cancellationToken = default)
     {
-        // Idempotency check
+        // Idempotency check with time-based cleanup
         lock (_lock)
         {
-            if (_processedRequests.Contains(request.RequestId))
+            // Clean up old entries
+            CleanupExpiredRequests();
+
+            if (_processedRequests.ContainsKey(request.RequestId))
             {
                 _logger.LogWarning("Duplicate request detected: {RequestId}. Skipping processing.", request.RequestId);
                 throw new InvalidOperationException($"Request {request.RequestId} has already been processed");
             }
-            _processedRequests.Add(request.RequestId);
+            _processedRequests[request.RequestId] = DateTime.UtcNow;
         }
 
         try
@@ -63,6 +67,25 @@ public class InspectionService : IInspectionService
                 _processedRequests.Remove(request.RequestId);
             }
             throw;
+        }
+    }
+
+    private void CleanupExpiredRequests()
+    {
+        var cutoffTime = DateTime.UtcNow - _idempotencyWindow;
+        var expiredKeys = _processedRequests
+            .Where(kvp => kvp.Value < cutoffTime)
+            .Select(kvp => kvp.Key)
+            .ToList();
+
+        foreach (var key in expiredKeys)
+        {
+            _processedRequests.Remove(key);
+        }
+
+        if (expiredKeys.Count > 0)
+        {
+            _logger.LogDebug("Cleaned up {Count} expired request IDs from idempotency cache", expiredKeys.Count);
         }
     }
 }
