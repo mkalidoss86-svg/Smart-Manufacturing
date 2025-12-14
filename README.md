@@ -1,6 +1,5 @@
 # Smart-Manufacturing
 
-
 The Smart Manufacturing Quality Platform is a scalable, event-driven quality intelligence system designed to monitor manufacturing processes in near real time, detect quality anomalies, and support autonomous decision-making through Agentic AI.
 
 ## Services
@@ -54,7 +53,40 @@ A .NET 8 Minimal API service for ingesting production quality events.
 
 **Documentation:** [docs/INGESTION_API.md](docs/INGESTION_API.md)
 
+
+### Inspection Worker Service
+
+A .NET 8 worker service that processes quality inspection requests from a message queue.
+
+**Key Features:**
+- Clean Architecture (Domain, Application, Infrastructure, Worker layers)
+- Event-driven processing with RabbitMQ
+- Strategy pattern for inspection logic
+- Retry and dead-letter queue patterns
+- Idempotent and stateless processing
+- Graceful shutdown support
+- Health checks and structured logging
+- Horizontally scalable
+
+**Documentation:** [docs/INSPECTION-WORKER.md](docs/INSPECTION-WORKER.md)
 ### Other Platform Services
+
+### Inspection Worker Service
+
+A .NET 8 worker service that processes quality inspection requests from a message queue.
+
+**Key Features:**
+- Clean Architecture (Domain, Application, Infrastructure, Worker layers)
+- Event-driven processing with RabbitMQ
+- Strategy pattern for inspection logic
+- Retry and dead-letter queue patterns
+- Idempotent and stateless processing
+- Graceful shutdown support
+- Health checks and structured logging
+- Horizontally scalable
+
+**Documentation:** [docs/INSPECTION-WORKER.md](docs/INSPECTION-WORKER.md)
+
 
 - **DataIngestion API** (Port 5001): Ingests manufacturing data
 - **QualityAnalytics API** (Port 5002): Analyzes quality metrics
