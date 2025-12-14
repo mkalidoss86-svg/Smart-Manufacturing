@@ -59,10 +59,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5106:8080"
-      - "7081:8443"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8080;https://+:8443
+      - ASPNETCORE_URLS=http://+:8080
     networks:
       - visionflow-network
     restart: unless-stopped
@@ -86,6 +85,7 @@ services:
       - redis
     networks:
       - visionflow-network
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
@@ -96,6 +96,7 @@ services:
     networks:
       - visionflow-network
     command: redis-server --appendonly yes
+    restart: unless-stopped
 
 networks:
   visionflow-network:
