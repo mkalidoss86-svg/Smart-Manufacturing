@@ -13,12 +13,15 @@ RUN npm config set strict-ssl false && npm install --omit=dev
 # Copy application files
 COPY . .
 
+# Make healthcheck script executable
+RUN chmod +x healthcheck.sh
+
 # Expose port
 EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+    CMD /app/healthcheck.sh
 
 # Run as non-root user
 USER node
