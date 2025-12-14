@@ -102,3 +102,54 @@ services:
 networks:
   visionflow-network:
     driver: bridge
+  results-api:
+    build:
+      context: ./src/ResultsApi
+      dockerfile: Dockerfile
+    ports:
+      - "5106:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    networks:
+      - visionflow-network
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Redis=redis:6379
+      - SignalR__MaxMessageSize=102400
+      - SignalR__ClientTimeoutSeconds=60
+      - SignalR__KeepAliveSeconds=30
+      - ConnectionLimits__MaxConnections=1000
+      - ConnectionLimits__MaxUpgradedConnections=1000
+    depends_on:
+      - redis
+    networks:
+      - visionflow-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - visionflow-network
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+networks:
+  visionflow-network:
+    driver: bridge
+
+volumes:
+  redis-data:
