@@ -10,7 +10,6 @@ public class InspectionNotificationService : IInspectionNotificationService
     private readonly INotificationPublisher _notificationPublisher;
     private readonly IEventStore _eventStore;
     private readonly List<IInspectionResultObserver> _observers = new();
-    private long _sequenceNumber = 0;
 
     public InspectionNotificationService(
         INotificationPublisher notificationPublisher,
@@ -37,12 +36,15 @@ public class InspectionNotificationService : IInspectionNotificationService
     {
         var inspectionResult = MapToInspectionResult(inspectionUpdateDto);
         
+        // Get next sequence number from event store (distributed, thread-safe)
+        var nextSequence = await _eventStore.GetNextSequenceNumberAsync(cancellationToken);
+        
         // Create and store event with sequence number
         var notificationEvent = new NotificationEvent
         {
             EventType = "InspectionUpdate",
             Payload = inspectionResult,
-            SequenceNumber = Interlocked.Increment(ref _sequenceNumber)
+            SequenceNumber = nextSequence
         };
 
         await _eventStore.StoreEventAsync(notificationEvent, cancellationToken);

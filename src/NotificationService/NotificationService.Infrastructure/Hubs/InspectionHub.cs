@@ -1,16 +1,17 @@
 using Microsoft.AspNetCore.SignalR;
 using NotificationService.Domain.Entities;
+using System.Collections.Concurrent;
 
 namespace NotificationService.Infrastructure.Hubs;
 
 public class InspectionHub : Hub
 {
-    private static readonly Dictionary<string, long> _clientSequenceNumbers = new();
+    private static readonly ConcurrentDictionary<string, long> _clientSequenceNumbers = new();
 
     public override async Task OnConnectedAsync()
     {
         var connectionId = Context.ConnectionId;
-        _clientSequenceNumbers[connectionId] = 0;
+        _clientSequenceNumbers.TryAdd(connectionId, 0);
         
         await base.OnConnectedAsync();
         await Clients.Caller.SendAsync("Connected", new { ConnectionId = connectionId, Timestamp = DateTime.UtcNow });
@@ -19,7 +20,7 @@ public class InspectionHub : Hub
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var connectionId = Context.ConnectionId;
-        _clientSequenceNumbers.Remove(connectionId);
+        _clientSequenceNumbers.TryRemove(connectionId, out _);
         
         await base.OnDisconnectedAsync(exception);
     }
@@ -33,7 +34,7 @@ public class InspectionHub : Hub
     public Task UpdateSequenceNumber(long sequenceNumber)
     {
         var connectionId = Context.ConnectionId;
-        _clientSequenceNumbers[connectionId] = sequenceNumber;
+        _clientSequenceNumbers.AddOrUpdate(connectionId, sequenceNumber, (_, _) => sequenceNumber);
         return Task.CompletedTask;
     }
 

@@ -10,10 +10,31 @@ public class RedisEventStore : IEventStore
     private readonly IDistributedCache _cache;
     private const string EventKeyPrefix = "event:";
     private const string SequenceKey = "sequence:latest";
+    private const string SequenceLockKey = "sequence:lock";
+    private static readonly SemaphoreSlim _semaphore = new(1, 1);
 
     public RedisEventStore(IDistributedCache cache)
     {
         _cache = cache;
+    }
+
+    public async Task<long> GetNextSequenceNumberAsync(CancellationToken cancellationToken = default)
+    {
+        await _semaphore.WaitAsync(cancellationToken);
+        try
+        {
+            var currentSequence = await GetLatestSequenceNumberAsync(cancellationToken);
+            var nextSequence = currentSequence + 1;
+            
+            // Store the new sequence number
+            await _cache.SetStringAsync(SequenceKey, nextSequence.ToString(), cancellationToken);
+            
+            return nextSequence;
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 
     public async Task StoreEventAsync(NotificationEvent notificationEvent, CancellationToken cancellationToken = default)
@@ -27,9 +48,6 @@ public class RedisEventStore : IEventStore
         };
 
         await _cache.SetStringAsync(key, json, options, cancellationToken);
-        
-        // Update latest sequence number
-        await _cache.SetStringAsync(SequenceKey, notificationEvent.SequenceNumber.ToString(), cancellationToken);
     }
 
     public async Task<IEnumerable<NotificationEvent>> GetMissedEventsAsync(long lastSequenceNumber, int maxCount = 100, CancellationToken cancellationToken = default)
@@ -60,6 +78,12 @@ public class RedisEventStore : IEventStore
     public async Task<long> GetLatestSequenceNumberAsync(CancellationToken cancellationToken = default)
     {
         var sequenceStr = await _cache.GetStringAsync(SequenceKey, cancellationToken);
-        return string.IsNullOrEmpty(sequenceStr) ? 0 : long.Parse(sequenceStr);
+        
+        if (string.IsNullOrEmpty(sequenceStr))
+        {
+            return 0;
+        }
+        
+        return long.TryParse(sequenceStr, out var sequence) ? sequence : 0;
     }
 }
