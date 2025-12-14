@@ -32,6 +32,7 @@ def find_open_ci_issues():
     """Find all open CI/CD failure issues"""
     try:
         search_url = f"{API_URL}/issues"
+        # GitHub API accepts labels as comma-separated string in query params
         params = {
             "state": "open",
             "labels": "ci",

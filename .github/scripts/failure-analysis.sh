@@ -61,6 +61,11 @@ echo -e "${RED}Pipeline failures detected: ${FAILED_STAGES[*]}${NC}"
 echo "Creating GitHub issue for failures..."
 
 # Call Python script to create detailed issue
-python3 .github/scripts/create-issue.py "${FAILED_STAGES[@]}"
+if python3 .github/scripts/create-issue.py "${FAILED_STAGES[@]}"; then
+    echo "Issue creation completed successfully"
+else
+    echo "ERROR: Failed to create issue" >&2
+    exit 1
+fi
 
 exit 0

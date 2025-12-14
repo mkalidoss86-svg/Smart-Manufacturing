@@ -10,6 +10,9 @@ import json
 import requests
 from datetime import datetime
 
+# Constants
+LOG_LINES_TO_EXTRACT = 30
+
 # GitHub API configuration
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
 GITHUB_REPOSITORY = os.environ.get('GITHUB_REPOSITORY')
@@ -169,9 +172,9 @@ def fetch_job_logs(failed_stages):
                 log_response = requests.get(logs_url, headers=HEADERS)
                 
                 if log_response.status_code == 200:
-                    # Extract last 30 lines of logs
+                    # Extract last N lines of logs
                     log_lines = log_response.text.split('\n')
-                    last_lines = log_lines[-30:] if len(log_lines) > 30 else log_lines
+                    last_lines = log_lines[-LOG_LINES_TO_EXTRACT:] if len(log_lines) > LOG_LINES_TO_EXTRACT else log_lines
                     log_snippets[job_name] = '\n'.join(last_lines)
         
         return log_snippets
@@ -202,6 +205,7 @@ def create_issue(failed_stages):
     # Create detailed issue body
     workflow_url = f"https://github.com/{GITHUB_REPOSITORY}/actions/runs/{GITHUB_RUN_ID}"
     commit_url = f"https://github.com/{GITHUB_REPOSITORY}/commit/{GITHUB_SHA}"
+    branch_name = GITHUB_REF.replace('refs/heads/', '').replace('refs/tags/', '')
     
     body = f"""## CI/CD Pipeline Failure Report
 
@@ -213,7 +217,7 @@ The CI/CD pipeline failed during the **{primary_stage}** stage.
 - **Workflow**: {GITHUB_WORKFLOW}
 - **Run Number**: #{GITHUB_RUN_NUMBER}
 - **Commit**: [`{GITHUB_SHA[:7]}`]({commit_url})
-- **Branch**: {GITHUB_REF}
+- **Branch**: {branch_name}
 - **Triggered by**: @{GITHUB_ACTOR}
 - **Timestamp**: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}
 
