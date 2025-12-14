@@ -1,0 +1,11 @@
+@AlertNotification.API_HostAddress = http://localhost:5003
+
+GET {{AlertNotification.API_HostAddress}}/health
+Accept: application/json
+
+###
+
+GET {{AlertNotification.API_HostAddress}}/
+Accept: application/json
+
+###
