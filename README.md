@@ -20,13 +20,45 @@ The Results API service provides RESTful endpoints for storing and querying insp
 
 **Documentation:** [src/ResultsApi/README.md](src/ResultsApi/README.md)
 
+### VisionFlow – Notification Service
+
+A real-time notification service built with .NET 8 and SignalR for pushing inspection updates to clients.
+
+**Features:**
+- **Real-time Communication**: SignalR-based WebSocket connections for instant updates
+- **Clean Architecture**: Separated into Domain, Application, Infrastructure, and API layers
+- **Observer/Pub-Sub Pattern**: Decoupled event-driven architecture
+- **Horizontal Scalability**: Redis backplane support for multi-instance deployments
+- **Missed-Event Recovery**: Clients can retrieve events missed during disconnection
+- **Connection Management**: Configurable connection limits and automatic reconnection handling
+- **Health Monitoring**: Built-in health check endpoint
+- **Structured Logging**: JSON-formatted logs for easy monitoring
+
+**Documentation:**
+- [Notification Service README](API.md)
+- [Deployment Guide](DEPLOYMENT.md)
+
+### Ingestion API
+
+A .NET 8 Minimal API service for ingesting production quality events.
+
+**Features:**
+- REST API for production quality events
+- Input validation with FluentValidation
+- Event enrichment (IDs, timestamps, lineId)
+- RabbitMQ publishing with retry and circuit breaker patterns
+- Structured logging with Serilog
+- Health check endpoint
+- Clean Architecture design
+
+**Documentation:** [docs/INGESTION_API.md](docs/INGESTION_API.md)
+
 ### Other Platform Services
 
-- **DataIngestion API**: Handles data ingestion from manufacturing lines
-- **QualityAnalytics API**: Performs quality analytics and anomaly detection
-- **AlertNotification API**: Manages alert notifications and escalations
-- **Dashboard API**: Provides dashboard and reporting capabilities
-- **Web UI**: Interactive web interface for monitoring and management
+- **DataIngestion API** (Port 5001): Ingests manufacturing data
+- **QualityAnalytics API** (Port 5002): Analyzes quality metrics
+- **AlertNotification API** (Port 5003): Manages alerts and notifications
+- **Dashboard API** (Port 5004): Provides dashboard data
 
 ## CI/CD Failure Analysis Agent
 
@@ -68,6 +100,8 @@ The failure analysis agent runs automatically on every push or pull request. To 
 
 - .NET 8 SDK or later
 - Docker and Docker Compose (for containerized deployment)
+- RabbitMQ (for message-based services)
+- Redis (for notification service backplane)
 - Node.js 18+ (for web-ui development)
 
 ### Quick Start with Docker Compose
@@ -94,12 +128,13 @@ Services will be available at:
 - QualityAnalytics API: http://localhost:5002
 - AlertNotification API: http://localhost:5003
 - Dashboard API: http://localhost:5004
-- Results API: https://localhost:7081 or http://localhost:5106
+- Results API: http://localhost:5106 (HTTP) or https://localhost:7081 (HTTPS)
+- Notification Service: http://localhost:8080 (HTTP) or http://localhost:8081 (SignalR)
 - Web UI: http://localhost:8080
 
-### Running Results API
+### Running Individual Services
 
-To run the Results API service specifically:
+#### Results API
 
 ```bash
 # Build the solution
@@ -115,19 +150,27 @@ The Results API will be available at:
 - HTTP: http://localhost:5106
 - Swagger UI: https://localhost:7081/swagger
 
-### Running Individual Services
-
-To run a specific service locally:
+#### Ingestion API
 
 ```bash
-# Navigate to service directory
-cd src/DataIngestion.API
+# Start RabbitMQ
+docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
 
-# Restore dependencies
-dotnet restore
-
-# Run the service
+# Build and run
+dotnet build VisionFlow.sln
+cd src/IngestionApi/VisionFlow.IngestionApi
 dotnet run
+```
+
+#### Notification Service
+
+```bash
+# Start Redis
+docker run -d --name redis -p 6379:6379 redis:7-alpine
+
+# Build and run
+dotnet build VisionFlow.sln
+dotnet run --project src/NotificationService/NotificationService.Api
 ```
 
 ## 🏥 Health Checks
@@ -140,17 +183,19 @@ curl http://localhost:5002/health  # QualityAnalytics API
 curl http://localhost:5003/health  # AlertNotification API
 curl http://localhost:5004/health  # Dashboard API
 curl http://localhost:5106/health  # Results API
+curl http://localhost:8080/health  # Notification Service
 ```
 
 ## 📊 API Documentation
 
-When running in Development mode, each service exposes Swagger UI:
+When running in Development mode, most services expose Swagger UI:
 
 - DataIngestion API: http://localhost:5001/swagger
 - QualityAnalytics API: http://localhost:5002/swagger
 - AlertNotification API: http://localhost:5003/swagger
 - Dashboard API: http://localhost:5004/swagger
 - Results API: https://localhost:7081/swagger
+- Ingestion API: Check service documentation
 
 ## 🐳 Docker
 
@@ -158,13 +203,10 @@ Each service has its own Dockerfile located in its respective directory:
 
 ```bash
 # Build individual service image
-docker build -t dataingestion-api:latest -f src/DataIngestion.API/Dockerfile src/DataIngestion.API
+docker build -t resultsapi:latest -f src/ResultsApi/Dockerfile src/ResultsApi
 
 # Run individual service
-docker run -p 5001:5001 -e ASPNETCORE_URLS=http://+:5001 dataingestion-api:latest
-
-# Build Results API
-docker build -t resultsapi:latest -f src/ResultsApi/Dockerfile src/ResultsApi
+docker run -p 5106:8080 resultsapi:latest
 ```
 
 ## ☸️ Kubernetes Deployment
@@ -194,18 +236,11 @@ kubectl get services -n visionflow
 ### Building All Services
 
 ```bash
-# From repository root
+# Build VisionFlow services
+dotnet build VisionFlow.sln
+
+# Build Results API (separate solution)
 dotnet build SmartManufacturing.sln
-```
-
-Or build individual services:
-
-```bash
-dotnet build src/DataIngestion.API/DataIngestion.API.csproj
-dotnet build src/QualityAnalytics.API/QualityAnalytics.API.csproj
-dotnet build src/AlertNotification.API/AlertNotification.API.csproj
-dotnet build src/Dashboard.API/Dashboard.API.csproj
-dotnet build src/ResultsApi/ResultsApi.csproj
 ```
 
 ### Project Structure
@@ -218,44 +253,54 @@ Smart-Manufacturing/
 │       ├── ci.yml                    # GitHub Actions CI workflow
 │       └── ci-pipeline.yml           # Full CI/CD pipeline
 ├── src/
-│   ├── DataIngestion.API/            # Data ingestion service
+│   ├── NotificationService/          # Notification service with SignalR
+│   ├── IngestionApi/                 # Ingestion API service
+│   │   └── VisionFlow.IngestionApi/
+│   ├── Domain/                       # Shared domain layer
+│   │   └── VisionFlow.Domain/
+│   ├── Application/                  # Shared application layer
+│   │   └── VisionFlow.Application/
+│   ├── Infrastructure/               # Shared infrastructure layer
+│   │   └── VisionFlow.Infrastructure/
+│   ├── DataIngestion.API/            # Legacy data ingestion service
 │   ├── QualityAnalytics.API/         # Quality analytics service
 │   ├── AlertNotification.API/        # Alert notification service
 │   ├── Dashboard.API/                # Dashboard API service
 │   └── ResultsApi/                   # Results API service (inspection results)
 ├── infrastructure/
 │   ├── k8s/                          # Kubernetes manifests
-│   │   ├── namespace.yaml
-│   │   ├── configmap.yaml
-│   │   ├── deployments.yaml
-│   │   └── services.yaml
 │   └── docker/                       # Docker configurations
 ├── web-ui/                           # Web UI service
 ├── docs/
-│   ├── ARCHITECTURE.md               # Detailed architecture documentation
+│   ├── ARCHITECTURE.md               # Architecture documentation
 │   ├── CI-CD.md                      # CI/CD documentation
-│   └── DOCKER_TESTING.md             # Docker testing guide
+│   ├── DOCKER_TESTING.md             # Docker testing guide
+│   └── INGESTION_API.md              # Ingestion API documentation
 ├── docker-compose.yml                # Local development compose file
-├── global.json                       # .NET SDK version
-├── SmartManufacturing.sln            # Solution file
+├── VisionFlow.sln                    # Main solution file
+├── SmartManufacturing.sln            # Legacy solution (Results API)
 └── README.md                         # This file
 ```
 
 ## Architecture
 
 The platform follows Clean Architecture principles with:
-- **Domain Layer**: Core business entities
-- **Application Layer**: DTOs, interfaces, and CQRS-style operations
-- **Infrastructure Layer**: Repository implementations (currently in-memory, designed for future database integration)
-- **API Layer**: RESTful endpoints using .NET Minimal APIs
+- **Domain Layer**: Core business entities and interfaces
+- **Application Layer**: DTOs, interfaces, business logic, and use cases
+- **Infrastructure Layer**: Repository implementations, external dependencies (RabbitMQ, Redis, databases)
+- **API Layer**: RESTful endpoints and presentation using .NET Minimal APIs
 
 ## Technology Stack
 
 - .NET 8.0
 - ASP.NET Core Minimal APIs
+- SignalR (for real-time communication)
+- RabbitMQ (for message queuing)
+- Redis (for distributed caching and SignalR backplane)
+- FluentValidation (for input validation)
+- Serilog (for structured logging)
 - Clean Architecture
 - Dependency Injection
-- Structured Logging
 - Docker & Docker Compose
 - Kubernetes
 - Node.js (Web UI)
@@ -277,7 +322,10 @@ See `.github/workflows/ci.yml` for details.
 - [Architecture Documentation](docs/ARCHITECTURE.md)
 - [CI/CD Documentation](docs/CI-CD.md)
 - [Docker Testing Guide](docs/DOCKER_TESTING.md)
+- [Ingestion API Documentation](docs/INGESTION_API.md)
 - [Results API Implementation](src/ResultsApi/IMPLEMENTATION_SUMMARY.md)
+- [Notification Service API](API.md)
+- [Deployment Guide](DEPLOYMENT.md)
 - [CI/CD Failure Analysis](IMPLEMENTATION_SUMMARY.md)
 
 ## 🤝 Contributing
@@ -286,4 +334,4 @@ This is a foundational scaffold for the VisionFlow platform. Business logic and 
 
 ## 📝 License
 
-Copyright © 2024 VisionFlow Platform
+Copyright © 2024 VisionFlow Smart Manufacturing Platform
