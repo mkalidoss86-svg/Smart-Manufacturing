@@ -38,12 +38,12 @@ dotnet build SmartManufacturing.sln
 cd src/ResultsApi
 dotnet run
 
-# The service will start on https://localhost:5001 (HTTPS) and http://localhost:5000 (HTTP)
+# The service will start on https://localhost:7081 (HTTPS) and http://localhost:5106 (HTTP)
 ```
 
 ### Accessing Swagger UI
 
-Navigate to `https://localhost:5001/swagger` in your browser to access the interactive API documentation.
+Navigate to `https://localhost:7081/swagger` in your browser to access the interactive API documentation.
 
 ## API Endpoints
 
@@ -285,10 +285,10 @@ This makes it easy to optimize each path independently in the future.
 
 ```bash
 # Health check
-curl -X GET http://localhost:5000/health
+curl -X GET http://localhost:5106/health
 
 # Create a result
-curl -X POST http://localhost:5000/api/results \
+curl -X POST http://localhost:5106/api/results \
   -H "Content-Type: application/json" \
   -d '{
     "lineId": "line-001",
@@ -299,10 +299,10 @@ curl -X POST http://localhost:5000/api/results \
   }'
 
 # Query results
-curl -X GET "http://localhost:5000/api/results?lineId=line-001"
+curl -X GET "http://localhost:5106/api/results?lineId=line-001"
 
 # Get by ID
-curl -X GET "http://localhost:5000/api/results/{id}"
+curl -X GET "http://localhost:5106/api/results/{id}"
 ```
 
 ## Future Enhancements

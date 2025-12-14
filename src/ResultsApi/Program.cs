@@ -3,6 +3,7 @@ using ResultsApi.Application.DTOs;
 using ResultsApi.Application.Interfaces;
 using ResultsApi.Domain;
 using ResultsApi.Infrastructure.Repositories;
+using System.ComponentModel.DataAnnotations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +47,48 @@ app.MapPost("/api/results", async (
 {
     try
     {
+        // Manual validation for record types
+        var errors = new Dictionary<string, string[]>();
+        
+        if (string.IsNullOrWhiteSpace(request.LineId))
+        {
+            errors.Add("LineId", new[] { "LineId is required and cannot be empty" });
+        }
+        else if (request.LineId.Length > 100)
+        {
+            errors.Add("LineId", new[] { "LineId cannot exceed 100 characters" });
+        }
+        
+        if (string.IsNullOrWhiteSpace(request.Status))
+        {
+            errors.Add("Status", new[] { "Status is required and cannot be empty" });
+        }
+        else if (request.Status.Length > 50)
+        {
+            errors.Add("Status", new[] { "Status cannot exceed 50 characters" });
+        }
+        
+        if (request.ProductId != null && request.ProductId.Length > 100)
+        {
+            errors.Add("ProductId", new[] { "ProductId cannot exceed 100 characters" });
+        }
+        
+        if (request.DefectType != null && request.DefectType.Length > 100)
+        {
+            errors.Add("DefectType", new[] { "DefectType cannot exceed 100 characters" });
+        }
+        
+        if (request.ConfidenceScore.HasValue && (request.ConfidenceScore.Value < 0.0 || request.ConfidenceScore.Value > 1.0))
+        {
+            errors.Add("ConfidenceScore", new[] { "ConfidenceScore must be between 0.0 and 1.0" });
+        }
+        
+        if (errors.Any())
+        {
+            logger.LogWarning("Validation failed for inspection result: {Errors}", string.Join(", ", errors.SelectMany(e => e.Value)));
+            return Results.ValidationProblem(errors);
+        }
+        
         logger.LogInformation("Creating inspection result for line {LineId} with status {Status}", 
             request.LineId, request.Status);
 

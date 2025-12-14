@@ -38,9 +38,9 @@ dotnet run
 ```
 
 The Results API will be available at:
-- HTTPS: https://localhost:5001
-- HTTP: http://localhost:5000
-- Swagger UI: https://localhost:5001/swagger
+- HTTPS: https://localhost:7081
+- HTTP: http://localhost:5106
+- Swagger UI: https://localhost:7081/swagger
 
 ## Architecture
 
