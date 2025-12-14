@@ -1,0 +1,128 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quality-service
+  namespace: visionflow
+  labels:
+    app: visionflow
+    component: quality-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: visionflow
+      component: quality-service
+  template:
+    metadata:
+      labels:
+        app: visionflow
+        component: quality-service
+    spec:
+      containers:
+      - name: quality-service
+        image: visionflow/quality-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8081
+          name: http
+          protocol: TCP
+        env:
+        - name: QUALITY_SERVICE_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: QUALITY_SERVICE_PORT
+        - name: ANOMALY_THRESHOLD
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: ANOMALY_THRESHOLD
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: LOG_LEVEL
+        - name: APP_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: APP_ENV
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: DB_NAME
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: REDIS_PORT
+        - name: KAFKA_BROKERS
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: KAFKA_BROKERS
+        - name: KAFKA_TOPIC_QUALITY
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: KAFKA_TOPIC_QUALITY
+        resources:
+          requests:
+            cpu: "300m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8081
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: quality-service
+  namespace: visionflow
+  labels:
+    app: visionflow
+    component: quality-service
+spec:
+  type: ClusterIP
+  selector:
+    app: visionflow
+    component: quality-service
+  ports:
+  - name: http
+    port: 8081
+    targetPort: 8081
+    protocol: TCP
