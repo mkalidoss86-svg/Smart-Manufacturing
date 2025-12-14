@@ -47,7 +47,6 @@ services:
           cpus: '0.5'
           memory: 256M
 
-  # Data Ingestion API
   dataingestion-api:
     build:
       context: ./src/DataIngestion.API
@@ -61,7 +60,6 @@ services:
       - visionflow-network
     restart: unless-stopped
 
-  # Quality Analytics API
   qualityanalytics-api:
     build:
       context: ./src/QualityAnalytics.API
@@ -75,7 +73,6 @@ services:
       - visionflow-network
     restart: unless-stopped
 
-  # Alert Notification API
   alertnotification-api:
     build:
       context: ./src/AlertNotification.API
@@ -89,7 +86,6 @@ services:
       - visionflow-network
     restart: unless-stopped
 
-  # Dashboard API
   dashboard-api:
     build:
       context: ./src/Dashboard.API
