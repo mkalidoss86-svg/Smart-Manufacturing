@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inspection-worker
+  namespace: visionflow
+  labels:
+    app: visionflow
+    component: inspection-worker
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: visionflow
+      component: inspection-worker
+  template:
+    metadata:
+      labels:
+        app: visionflow
+        component: inspection-worker
+      annotations:
+        # Annotation for HPA preparation
+        autoscaling.enabled: "true"
+    spec:
+      containers:
+      - name: inspection-worker
+        image: visionflow/inspection-worker:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: WORKER_CONCURRENCY
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: WORKER_CONCURRENCY
+        - name: WORKER_PREFETCH_COUNT
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: WORKER_PREFETCH_COUNT
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: LOG_LEVEL
+        - name: APP_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: APP_ENV
+        - name: KAFKA_BROKERS
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: KAFKA_BROKERS
+        - name: KAFKA_TOPIC_INSPECTION
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: KAFKA_TOPIC_INSPECTION
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: REDIS_PORT
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: visionflow-config
+              key: DB_NAME
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2000m"
+            memory: "4Gi"
+        readinessProbe:
+          # For production, implement a proper health endpoint (e.g., HTTP /health)
+          # or create a readiness indicator file that the worker manages
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "ps aux | grep -v grep | grep -q '[w]orker' || exit 1"
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        livenessProbe:
+          # For production, implement a proper health endpoint (e.g., HTTP /health)
+          # that verifies the worker can process messages
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "ps aux | grep -v grep | grep -q '[w]orker' || exit 1"
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
