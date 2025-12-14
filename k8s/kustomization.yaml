@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Namespace for all resources
+namespace: visionflow
+
+# Resources to deploy
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - api-gateway.yaml
+  - quality-service.yaml
+  - analytics-service.yaml
+  - inspection-worker.yaml
+
+# Common labels applied to all resources
+labels:
+  - pairs:
+      platform: visionflow
+      managed-by: kustomize
+
+# Common annotations
+commonAnnotations:
+  description: "VisionFlow Smart Manufacturing Quality Platform"
+  version: "1.0.0"
