@@ -53,6 +53,12 @@ try
     {
         try
         {
+            // Validate lineId
+            if (string.IsNullOrWhiteSpace(lineId))
+            {
+                return Results.BadRequest(new { errors = new[] { "lineId is required" } });
+            }
+
             var (isSuccess, errors) = await eventService.ProcessEventAsync(eventDto, lineId, cancellationToken);
 
             if (!isSuccess)

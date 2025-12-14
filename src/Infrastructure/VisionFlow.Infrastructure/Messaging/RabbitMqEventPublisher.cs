@@ -83,7 +83,7 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
                 Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds())
             };
 
-            if (_channel != null)
+            if (_channel != null && _channel.IsOpen)
             {
                 await _channel.BasicPublishAsync(
                     exchange: _settings.ExchangeName,
@@ -96,6 +96,10 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
                 _logger.LogInformation(
                     "Published event {EventId} for Product {ProductId} on Line {LineId}",
                     qualityEvent.EventId, qualityEvent.ProductId, qualityEvent.LineId);
+            }
+            else
+            {
+                throw new InvalidOperationException("RabbitMQ channel is not available");
             }
         });
     }
